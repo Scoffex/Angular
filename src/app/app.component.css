@@ -1,0 +1,35 @@
+
+h1{
+    color: red;
+}
+
+.MAINDIV{
+    background-color: black;
+}
+
+.MAINDIV_WHITE{
+    background-color: yellow;
+}
+
+.dividi{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+.dividi p{
+    padding: 10px;
+    margin: 10px 0px;
+}
+.dividi input{
+    width: 100%;
+}
+.dividi button{
+    margin: 0 auto;
+    background-color: red;
+    border: none;
+}
+
+.divName p{
+    color: red;
+}
