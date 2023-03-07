@@ -1,0 +1,9 @@
+<app-Header (sectionSelected)="isRecipes($event)"></app-Header>
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      <app-recipes *ngIf="isRecipe"></app-recipes>
+      <app-shopping-list (emitEventToPadre)="onVariableUpdated($event)" *ngIf="isShopping"></app-shopping-list>
+    </div>
+  </div>
+</div>

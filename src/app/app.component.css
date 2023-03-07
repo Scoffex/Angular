@@ -33,3 +33,8 @@ h1{
 .divName p{
     color: red;
 }
+
+ul, li{
+    color: red;
+    background-color: black;
+}
