@@ -1,16 +1,33 @@
-import { Component } from '@angular/core';
-
-
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Constants } from './shareFolder/constants.utils';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent {
+export class AppComponent{
+  
+  isRecipe: boolean = true;
+  isShopping: boolean;
+  constants: Constants;
+   constructor(){
+    this.constants = new Constants;
+   }
 
-  ciao: string = "Hello World";
-
-  buttonClicked(nome: any){
-    console.log("ciao amici della postale, pezzo di codice passato dall'esterno: "  + nome);
+  isRecipes(section: string){
+    section = section.toLowerCase();
+    switch(section){
+      case this.constants.RECIPES:
+        this.isRecipe = true;
+        this.isShopping = false;
+        break;
+      case this.constants.SHOPPING:
+        this.isRecipe = false;
+        this.isShopping = true;
+        break;
+    }
   }
+
+
+ 
 }

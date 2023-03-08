@@ -1,8 +1,9 @@
-<div class="container" >
+<app-Header (sectionSelected)="isRecipes($event)"></app-Header>
+<div class="container">
   <div class="row">
-    <div class="col-xs-12">
-      <h1>WELCOME TO ANGULAR</h1>
-      <app-server [cicciobello]="ciao" (bhoProviam)="buttonClicked($event)" ></app-server>
+    <div class="col-md-12">
+      <app-recipes *ngIf="isRecipe"></app-recipes>
+      <app-shopping-list (emitEventToPadre)="onVariableUpdated($event)" *ngIf="isShopping"></app-shopping-list>
     </div>
   </div>
 </div>
