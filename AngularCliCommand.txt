@@ -1,0 +1,320 @@
+installare cli angular = npm install -g @angular/cli
+creare nuovo progetto angular = ng new {nomeProgetto} --no-strict (disattivare la strict mode per ore, serve per migliorare la manuntenzione del codice)
+installare bootsrap (spostarsi nella cartella del progetto appena creato) = ng install --save bootstrap@3
+aggiungere bootstrap all'interno di styles[] di angular.json specificando il percorso in cui è installato, di solito = "styles": [
+              "src/styles.css",
+              "node_modules/bootstrap/dist/css/bootstrap.min.css"
+            ],
+in app.module.ts inserire in declaretions ogni componente creata e importare FormsModule: esempio di app.module.ts =
+#################################################################
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import {HeaderComponent} from './Header/header.component'
+import { AppComponent } from './app.component';
+import { FormsModule } from '@angular/forms';
+import { RecipesComponent } from './recipes/recipes.component';
+@NgModule({
+  declarations: [
+    AppComponent,
+    HeaderComponent,
+    RecipesComponent
+  ],
+  imports: [
+    BrowserModule,
+    FormsModule
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+################################################################
+
+creare un nuovo component =  ng g c {nomeComponent} --skip-tests
+
+
+NOTE ANGULAR:
+
+
+#################################################################################################################################################
+### INPUT
+Decorator In Angular, l'@Input() decorator viene utilizzato per passare i dati da un componente genitore a un componente figlio In Angular non è possibile accedere agli elementi di una classe al di fuori del component, ma con il decorator @Input possiamo permetterlo. è possibile anche settare il valore da dare all'input, tipo il name di Spring, e nel caso non venga settato prenderà automaticamente il nome che abbiamo dato all'elemento. 
+Nella component figlio creiamo un elemento @Input() ad esempio @Input('nomeCustomPerInput') datoRicevutoDaPadre: string; (abbiamo supposto che la component figlio debba ricevere un dato stringa dalla component padre);
+
+Nell'html della component padre quando andremo a istanziare la component figlio passaremo il dato che si desidera dal padre al figlio in questa maniera: 
+supponendo la component figlio si chiami app server:
+<app-server [nomeCustomPerInput]="variabilePresenteNelPadreDaInviare"  ></app-server>
+
+#################################################################################################################################################
+### OUTPUT
+
+@Output ci permette di passare un elemento presente in un component child, ad un component padre come avviene tutto ciò:
+1) bisogna creare un EventEmitter e taggarlo con @Output ad esempio:
+@Output('eventoDaEmettere') eventEmitter = new EventEmitter<tipologiaDiDatoDaPassare>();
+tale event verrà emesso quando si vorrà, ad esmepio supponiamo che tale eventEmitter debba emettere come dato il nome dell'soggetto inserito nel form, pertanto una stringa. Potremo settarlo per emetterlo quando un utente clicca su un determinato bottone. Per fare ciò: 
+
+buttonClicked(){
+
+this.eventEmitter.emit(this.name);
+}
+Ora il nostro component child avrà emesso il dato, ora toccherà al component padre rimanere in ascolto dell'emissiione di tale dato e prenderselo. Questo avviene nell'html mappando il valore emesso con una variabile o passandolo come parametro di una funzione, in tale maniera:
+
+<app-shopping-edit (variableUpdated)="onVariableUpdated($event)"></app-shopping-edit>
+Ad esempio supponiamo che l'elemento figlio si chiami <app-shopping-edit> il component padre si mette in ascolto e quando viene emesso il valore viene passato al metodo presente nel componente padre "onVariableUpdated" che farà le sue logiche con tale dato. Nel caso in cui si voglia passare tale dato ad un component ancora più su, bisognerà ripetere la procedura in questo caso mettendo l'output sulla component che ha appena ricevuto il dato emesso.
+##############################################################################################################################################
+
+
+#################################################################################################################################################
+### NG CONTENT
+Prendiamo esempio questo codice html di una component padre: 
+
+<div class="container" >
+  <div class="row">
+    <div class="col-xs-12">
+      <h1>WELCOME TO ANGULAR</h1>
+      <app-server [cicciobello]="ciao" (bhoProviam)="buttonClicked($event)" ></app-server>
+    </div>
+  </div>
+</div>
+
+App server è una component figlia, se volessimo inserire del codice all'interno di app-server senza però inserirlo dentro il suo templete ma fra le sue parentesi di apertura e chiusura ad esempio: ù
+
+ <app-server [cicciobello]="ciao" (bhoProviam)="buttonClicked($event)" >
+	<h1>stampa qualcosa </h1>
+ </app-server>
+ 
+Ciò non è possibile in quanto tale h1 andrebbe perso. Per permettere ciò bisogna inserire all'interno del html del component figlio il tag <ng-content></ng-content> che permette ad una component padre di inserire codice fra i tag della component child nel suo stesso templete. 
+##############################################################################################################################################
+
+#################################################################################################################################################
+### ViewChild()
+
+Con viewChild è un altro modo per accedere alle proprietà di un component child, ma può essere anche usato dal component stesso per mapparsi le referance nel template. Supponiamo di avere un input text con una referance chiamta #inputName:
+<input type="text" #inputName>
+nel file ts dello stesso component, possiamo salvarci quel tag html mappato con una referance in una variabile ts, così:
+
+@ViewChild('inputName') inputNameElement: ElementRef; //è una variabile tipizzata di tipo ElementRef
+
+per stampare il valore dell'elemento basta fare:
+console.log(inputNameElement.nativeElement.value); //abbiamo effettuato l'accesso al valore della variabile.
+
+Come detto precedentemente può anche essere usato però per permettere ad una component padre di accedere a delle properietà o metodi del component figlio, basta fare la @viewChild sulla component stessa. Ad esempio se la component figlio ha la classe ts che si chiama ChildTsComponent, nel file ts della component padre scriveremo:
+@ViewChild(ChildTsComponent) childComponent: ChildTsComponent;
+in tal caso avremo tutto il component figlio da poter sfruttare nel component padre e potremo accedere al valore delle sue properietà e metodi.
+ad esempio per stampare di nuovo l'input stampato precedentemente bisogna scrivere:
+console.log(this.childComponent.inputNameElement.nativeElement.value);
+##############################################################################################################################################
+
+
+#################################################################################################################################################
+### @ContentChild()
+
+ContentChild permette ad un component child di accedere agli elementi html che possiedono una referance che vengono creati dentro l'ng-content. Esempio abbiamo un component padre con questo codice: 
+---
+<ng-content></ng-content> 
+<div class="row">
+    <div class="col-xs-10">
+        <app-shopping-edit [Array]="ingredientsArr" (variableUpdated)="onVariableUpdated($event)">
+
+            <h1 #amiciPostale>CIAO AMICI DELLA POSTALE</h1>
+            <H1 #amiciMadama>CIAO AMICI DELLA MADAMA</H1>
+        </app-shopping-edit>
+        <hr>
+        <button (click)="mama()">Click me for try</button>
+        <ul class="list-group">
+            <a class="list-group-item" style="cursor: pointer" *ngFor="let ingredient of ingredientsArr"> {{ingredient.name}} ({{ingredient.amount}})</a>
+        </ul>
+    </div>
+</div>
+---
+La component child ha attivato l'ng-content che ci permette di scrivere codice fra i suoi tag <app-shopping-edit> infatti sono presenti due tag h1. Per accedere a tali properietà è opportuno non utilizzare il viewChild in quanto darebbe errore ma utilizzare il viewContent, che fa la medesima cosa ma è usato specificatamente con tutti gli elementi creati tramite ng content. 
+
+nel file ts della component app-shopping-edit scriveremo ciò per avere il valore dell'attributo html: 
+@ViewChild('amiciPostale') namee: ElementRef;
+#################################################################################################################################################
+
+
+##############################################################################################################################################
+
+##############################################################################################################################################
+HOOK 
+
+Gli hook in Angular sono funzioni che vengono eseguite automaticamente in determinati momenti del ciclo di vita di un componente. In altre parole, gli hook sono metodi predefiniti che vengono richiamati automaticamente da Angular quando accadono determinati eventi durante il ciclo di vita di un componente.
+
+Gli hook in Angular sono di diversi tipi, e ogni tipo di hook viene eseguito in un momento specifico del ciclo di vita del componente. Ad esempio, alcuni degli hook più comuni in Angular sono:
+
+- ngOnInit(): viene eseguito subito dopo che il componente è stato inizializzato, ovvero dopo che sono stati stabiliti tutti i binding tra le proprietà e le view del componente.
+- ngOnDestroy(): viene eseguito prima che il componente venga distrutto, ovvero quando il componente non è più utilizzato all'interno dell'applicazione.
+- ngOnChanges(): viene eseguito ogni volta che una delle proprietà di input del componente cambia.
+
+all'interno di questi hook possono essere inseriti dei metodi che pertanto verranno eseguiti ogni qual volta l'hook si attiverà, ad esempio se vogliamo reindirizzare una lista di utenti ottenuta da un server remoto appena si carica l'applicazione utilizzereo ngOnInit() e reindirizzeremo la lista non appena la component sarà caricata.
+
+Maggiori dettagli degli hook: 
+
+Gli "hook" in Angular sono metodi predefiniti che vengono chiamati in determinati momenti del ciclo di vita di un componente o di una direttiva. Questi hook consentono di eseguire azioni specifiche in base allo stato del componente/direttiva durante il suo ciclo di vita.
+
+Di seguito ti presento i principali hook di Angular:
+
+ngOnChanges - Questo hook viene chiamato quando il componente/direttiva riceve input dai genitori. Può essere usato per eseguire azioni specifiche quando gli input cambiano.
+Esempio: Immagina di avere un componente "counter" che riceve un input "count" dal componente genitore. Quando il valore di "count" cambia, il componente "counter" potrebbe aggiornare il suo stato interno per riflettere il nuovo valore.
+
+ngOnInit - Questo hook viene chiamato quando il componente/direttiva viene inizializzato. Può essere usato per eseguire azioni specifiche all'avvio del componente/direttiva.
+Esempio: Immagina di avere un componente "user-list" che deve recuperare l'elenco degli utenti da un servizio all'avvio. Il componente potrebbe utilizzare il metodo ngOnInit per chiamare il servizio e recuperare l'elenco degli utenti.
+
+ngDoCheck - Questo hook viene chiamato quando viene rilevato un cambiamento nell'applicazione e viene eseguito il controllo di cambiamenti. Può essere usato per eseguire azioni specifiche quando si desidera eseguire un controllo di cambiamenti personalizzato.
+Esempio: Immagina di avere un componente "search" che deve eseguire una ricerca personalizzata ogni volta che viene rilevato un cambiamento nell'input di ricerca. Il componente potrebbe utilizzare il metodo ngDoCheck per eseguire la ricerca personalizzata ogni volta che viene rilevato un cambiamento.
+
+ngOnDestroy - Questo hook viene chiamato quando il componente/direttiva viene distrutto. Può essere utilizzato per eseguire azioni specifiche prima che il componente/direttiva venga distrutto.
+Esempio: Immagina di avere un componente "timer" che deve interrompere il timer prima che il componente venga distrutto. Il componente potrebbe utilizzare il metodo ngOnDestroy per interrompere il timer prima che il componente venga distrutto.
+
+Questi sono solo alcuni esempi di hook di Angular. Ogni hook ha uno scopo specifico e può essere utilizzato in modo creativo per personalizzare il comportamento del componente/direttiva.
+##############################################################################################################################################
+
+#################################################################################################################################################
+Directive 
+
+Le direttive in Angular sono un meccanismo per estendere la sintassi HTML e aggiungere funzionalità dinamiche al DOM (Document Object Model) durante la fase di compilazione del template.
+
+Ci sono diversi tipi di direttive in Angular:
+
+- Direttive strutturali: modificano la struttura del DOM aggiungendo, rimuovendo o sostituendo elementi. Esempi di direttive strutturali includono ngIf, ngFor, ngSwitch.
+- Direttive di attributo: modificano gli attributi degli elementi del DOM. Esempi di direttive di attributo includono ngClass, ngStyle.
+- Direttive di componente: definiscono un componente personalizzato che può essere riutilizzato all'interno del template. (I classici component)
+
+E' possibile crearsi delle directive custom, basta creare una classe ts e mapparla non con component ma con Directive: 
+
+@Directive({
+    selector: '[goodDirective]'
+})
+export class GoodDirective {}
+
+in questo esempio abbiamo creato la classe GoodDirective che non è una component ma è una directive che applicheremo a qualsiasi tag html e nel quale potremo settare la logica che ci interessa.  
+
+ ######## NOTA IMPORTANTE: ogni singola directive va aggiunta nel app.module.ts e va aggiunta alle declarations.
+ 
+ Esempio di una directive custom che in caso di passaggio con il mouse modifica il colore del background: 
+ 
+ @Directive({
+    selector: '[goodDirective]'
+})
+export class GoodDirective {
+    defaultColor: string = "transparent"; 
+    @Input() colorSettingOfUser: string;
+   
+    constructor(private refElement: ElementRef, private renderer: Renderer2){
+
+    }
+   //############## FIRST METHOD
+
+   /*  @HostListener('mouseenter') onMouseEnter(eventData: Event) {
+        this.renderer.setStyle(this.refElement.nativeElement, 'background-color', 'green');
+        this.renderer.setStyle(this.refElement.nativeElement, 'color', 'white');
+    }
+
+    @HostListener('mouseleave') onMouseLeave(eventData: Event) {
+        this.renderer.setStyle(this.refElement.nativeElement, 'background-color', 'transparent')
+        this.renderer.setStyle(this.refElement.nativeElement, 'color', 'black');
+    }
+     */
+
+       //############## SECOND METHOD
+
+       @HostBinding('style.backgroundColor') backgroundColor: string = this.defaultColor;
+
+       @HostListener('mouseenter') onMouseEnter(eventData: Event) {
+        this.backgroundColor = this.colorSettingOfUser
+    }
+
+     @HostListener('mouseleave') onMouseLeave(eventData: Event) {
+        this.backgroundColor = this.defaultColor
+        }
+
+}
+
+SPIEGAZIONE DECORATOR:
+------------------------------------------------------------------------------------------------------------------------
+@HostBinding host binding ci permette di mappare un valore del tag html a cui stiamo applicando la directive in una variabile typescript, in modo da poterla modificare dinamicamente ad esempio in questo caso stiamo mappando il background dell'elemento html in una stringa: 
+
+@HostBinding('style.backgroundColor') backgroundColor: string;
+
+ora possiamo creare un metodo che in base a determinate logiche modifichi il background semplicemente attribuendo un valore alla variabile.
+
+se volessimo che sia l'utente stesso a passarci la proprietà da settare al background allora dovremo crearci anche una variabile di input: 
+
+ @Input() colorSettingOfUser: string; 
+
+in questo caso quando applicheremo la directive ad un elemento html potremo passare il valore alla variabile taggata come input.
+supponiamo che la directive si chiami appHighlight in questo caso nell'html scriveremo: 
+
+< div appHighlight [colorSettingOfUser]="'yellow'"> 
+------------------------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------------------------
+@HostListener
+
+@HostListener è un decorator di Angular che consente di ascoltare gli eventi su un elemento DOM in un componente. Questo decorator può essere utilizzato per aggiungere un listener per un evento, come il clic di un pulsante o la pressione di un tasto, e quindi eseguire una funzione quando quell'evento viene attivato.
+
+@HostListener('click') onClick() {
+    console.log('Button clicked!');
+  }
+  
+In questo caso stiamo ascoltando il click dell'elemento html, quando verrà cliccato allora verrà eseguito il metodo presente nell'host listner
+
+@HostListener può essere utilizzato per ascoltare molti altri eventi, come 'keydown', 'mouseenter', 'mouseleave', ecc. L'evento da ascoltare viene specificato come argomento del decorator.
+------------------------------------------------------------------------------------------------------------------------
+#################################################################################################################################################
+
+#################################################################################################################################################
+SERVICE AND DIPENDENCY INJECTION
+
+in angular i service proprio come in spring, sono classi che si occupano di sviluppare una determinata logica e che possono essere riutilizzate nel codice ovunque vogliamo. In angular i service sono semplici classi ts, non necessitano di alcun decorator a differenza delle component o delle directive che invece gli richiedono. 
+
+i service come detto prima vengono iniettati nel codice, qui rientra il concetto di dipendency injection che è alla base di framework come angular e spring, semplicemente non siamo noi a istanziarci il service che ci serve ma ci viene iniettato direttamente da angular. Come avviene ciò:
+ 
+basta indicarlo nel costruttore della classe nel quale vogliamo utilizzare il nostro service. Esempio:
+
+constructor(private logger: LoggerRender){
+    
+  }
+  
+angular quando builderà la nostra component capirà che avremo necessita del service loggerRender e ce lo innietterà, ovviamente ciò non basta affinchè la dipendency funziona ma bisogna specificare ad Angular che service effettivamente deve inniettare, da dove se lo deve andare a prendere tale service, ciò avviene indicando nella struttura del component una nuova proprietà chiamata providers: [] nel quale al suo interno andremo a indicare tutti i service che angular dovrà iniettare. 
+Esempio:
+
+@Component({
+  selector: 'app-new-account',
+  templateUrl: './new-account.component.html',
+  styleUrls: ['./new-account.component.css'],
+  providers: [LoggerRender]
+})
+
+Codice completo: 
+
+import { Component, EventEmitter, Output } from '@angular/core';
+import { LoggerRender } from '../account/LogRender.service';
+
+@Component({
+  selector: 'app-new-account',
+  templateUrl: './new-account.component.html',
+  styleUrls: ['./new-account.component.css'],
+  providers: [LoggerRender]
+})
+export class NewAccountComponent {
+  @Output() accountAdded = new EventEmitter<{name: string, status: string}>();
+
+  constructor(private logger: LoggerRender){
+    
+  }
+  onCreateAccount(accountName: string, accountStatus: string) {
+    this.accountAdded.emit({
+      name: accountName,
+      status: accountStatus
+    });
+    this.logger.renderingLog("The name of account: " + accountName + " the status: " + accountStatus);
+  }
+}
+
+IMPORTANTE NOTA SUI SERVICE:
+Supponiamo di avere un service, un component child ed un comoponent padre. Se aggiungessimo ad entrambi nell'array providers locato nel component , il service automaticamente angualr creerà due istanze diverse del service e non innietterà la medesima, nel caso si volesse utilizzare la stessa istanza del service basta iniettarlo tramite providers solo nel component padre, e nel component figlio richiamarselo solo tramite il costruttore (senza aggiungerlo anche a questo componet all'array providers, perchè in questo caso verrebbe sovrascritto). Ovviamente se vogliamo che tutto il nostro progetto utilizzi la medesima istanza del service dobbiamo iniettarlo nel provider dell'appModule (e non della component padre come app component) e richiamarlo nei component mediante costruttore.
+
+INIETTARE SERVICE NEI SERVICE:
+Nel caso in cui volessimo utilizzare un service in un service la situazione cambia rispetto all'esempio fatto precedentemente. In quanto un service per essere inniettato necessita obbligatoriamente di alcuni metaDati, che sono presenti nei component e nelle directive. Per quanto riguarda invece il service (che è una semplice classe ts) per poter iniettare un service al suo interno dobbiamo taggare la classe con @injectable(). Successivamente basta creare il classico costruttore per i service, per poterlo utilizzare. Importante dalle versioni precedenti di Angular bisognava taggare con @Injectable() unicamente il service a cui si doveva inniettare il service, e non il service che veniva inniettato. Dalle versioni sussessive di angular è necessario aggiungere @injectable() ad entrambi i service, sia chi viene iniettato sia chi inietta.
+#################################################################################################################################################
