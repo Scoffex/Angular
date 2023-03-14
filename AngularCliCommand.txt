@@ -1,6 +1,6 @@
 installare cli angular = npm install -g @angular/cli
 creare nuovo progetto angular = ng new {nomeProgetto} --no-strict (disattivare la strict mode per ore, serve per migliorare la manuntenzione del codice)
-installare bootsrap (spostarsi nella cartella del progetto appena creato) = ng install --save bootstrap@3
+installare bootsrap (spostarsi nella cartella del progetto appena creato) = npm install --save bootstrap@3
 aggiungere bootstrap all'interno di styles[] di angular.json specificando il percorso in cui è installato, di solito = "styles": [
               "src/styles.css",
               "node_modules/bootstrap/dist/css/bootstrap.min.css"
@@ -37,7 +37,7 @@ NOTE ANGULAR:
 
 #################################################################################################################################################
 ### INPUT
-Decorator In Angular, l'@Input() decorator viene utilizzato per passare i dati da un componente genitore a un componente figlio In Angular non è possibile accedere agli elementi di una classe al di fuori del component, ma con il decorator @Input possiamo permetterlo. è possibile anche settare il valore da dare all'input, tipo il name di Spring, e nel caso non venga settato prenderà automaticamente il nome che abbiamo dato all'elemento. 
+Decorator In Angular, l'@Input() decorator viene utilizzato per passare i dati da un componente genitore a un componente figlio. In Angular non è possibile accedere agli elementi di una classe al di fuori del component, ma con il decorator @Input possiamo permetterlo. è possibile anche settare il valore da dare all'input, tipo il name di Spring, e nel caso non venga settato prenderà automaticamente il nome che abbiamo dato all'elemento. 
 Nella component figlio creiamo un elemento @Input() ad esempio @Input('nomeCustomPerInput') datoRicevutoDaPadre: string; (abbiamo supposto che la component figlio debba ricevere un dato stringa dalla component padre);
 
 Nell'html della component padre quando andremo a istanziare la component figlio passaremo il dato che si desidera dal padre al figlio in questa maniera: 
@@ -317,4 +317,262 @@ Supponiamo di avere un service, un component child ed un comoponent padre. Se ag
 
 INIETTARE SERVICE NEI SERVICE:
 Nel caso in cui volessimo utilizzare un service in un service la situazione cambia rispetto all'esempio fatto precedentemente. In quanto un service per essere inniettato necessita obbligatoriamente di alcuni metaDati, che sono presenti nei component e nelle directive. Per quanto riguarda invece il service (che è una semplice classe ts) per poter iniettare un service al suo interno dobbiamo taggare la classe con @injectable(). Successivamente basta creare il classico costruttore per i service, per poterlo utilizzare. Importante dalle versioni precedenti di Angular bisognava taggare con @Injectable() unicamente il service a cui si doveva inniettare il service, e non il service che veniva inniettato. Dalle versioni sussessive di angular è necessario aggiungere @injectable() ad entrambi i service, sia chi viene iniettato sia chi inietta.
+
+PASSARE DATI FRA COMPONENT TRAMITE I SERVICE:
+Per passare i dati trimite i service fra le varie component possiamo usare due principali elementi di Angular, il subscribe e l'Event Emitter. Nel service ci creiamo un EventEmitter che emetterà i dati che necessitiamo emettere (tali dati verranno passati dal component child che chiamerà l'emitter del service) mentre il component padre rimarrà in ascolto dell'emit del service. 
+In pratica il component effettua la subscribe all'emitter della service e appena l'emitter invia i dati, il component prenderà tali dati e verrà eseguita della logica all'interno scritta da noi, molto semplicemente potremmo salvare tali dati emessi dal service in una variabile.
+
+Codice:
+	ingredientrEmitter = new EventEmitter<Ingredients[]>();  //emitter del service
+	
+	emitIngredients(ingredients: Ingredients[]){	 //In questo caso aggiungiamo all'array del service dei nuovi ingredienti provenienti dal component che chiama 
+		this.ingredientsArr.push(...ingredients);	 //questo metodo
+		this.ingredientrEmitter.emit(this.ingredientsArr);
+	} 
+	
+	
+	
+	ngOnInit(): void {		//Il metodo in questione invece appartiene al component padre che rimane in ascolto trmite il subscribe dell'evento emesso e si salva i 
+		this.recipeService.recipeEmitter.subscribe((recipe: Recipe) => {	//dati in una variabile.
+		this.recipeToPass = recipe;
+		});
+		console.log(this.recipeToPass);
+	}
 #################################################################################################################################################
+
+#################################################################################################################################################
+ROUTING
+
+Il routing in Angular è il processo di gestione della navigazione all'interno di un'applicazione Angular, consentendo agli utenti di spostarsi tra diverse pagine o viste dell'applicazione senza dover ricaricare completamente la pagina. Il routing in Angular ci permette di navigare fra i diversi component come se fossero diverse pagine web, locate in diversi indirizzi ma ovviamente che risiedono tutte in una singola applicazione (ovvero appunto singoli component, e ci muoviamo fra di essi tramite diversi indirizzi url). Per permettere il routing in angular dobbiamos ettare in AppComponent nel file ts, un array di oggetti con all'interno il path dell'indirizzo e che component è associato a quel path: 
+
+const RoutingPage = [
+  {
+    path: '',
+    component: HomeComponent,
+  },
+  {
+    path: 'user',
+    component: UsersComponent,
+  },
+  {
+    path: 'servers',
+    component: ServersComponent,
+  },
+];
+
+successivamente aggiungiamo alle imports il modulo di routing di angular (e gli passiamo il nostro array di oggetti come parametro):
+
+ imports: [BrowserModule, FormsModule, RouterModule.forRoot(RoutingPage)],
+ 
+Ora nella nostra homepage non inseriretimo la varie component come abbiamo sempre fatto, ma avremo una singola directive chiamata <router-outlet> la quale si occuperà di mostrarci la component user all'indirizzo '/user', la component server all'indirizzo 'servers' e la component home sarà la prima a venire reindirizzata in quanto non presenta alcun path speicifico.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Ovviamente per navigare all'interno della pagina non necessitiamo di inserire gli indirizzi url manualmente ma avremo un header che ci permetterà di muoverci fra le differenti component della nostra pagina web, l'header sarà composto così:
+
+<ul class="nav nav-tabs">
+        <li role="presentation" class="active"><a routerLink="/">Home</a></li>
+        <li role="presentation"><a routerLink="/servers">Servers</a></li>
+        <li role="presentation"><a routerLink="/user">Users</a></li>
+</ul>
+	  
+La domanda sorge spontanea, perchè usare routerLinks invece del classico a href per effettuare il routing fra le pagine... semplicemente perchè a differenza di un link normale (<a href="">), routerLink non effettua una nuova richiesta al server, ma cambia semplicemente la visualizzazione dell'URL all'interno della barra degli indirizzi del browser e aggiorna la visualizzazione della pagina nell'applicazione.
+
+VANTAGGI ROUTER LINKS:
+
+ - Maggiore efficienza: routerLink non effettua una nuova richiesta al server per caricare la nuova pagina, il che significa che il carico sul server e la larghezza di banda sono ridotti.
+
+ - Maggiore velocità: grazie all'utilizzo di routerLink, l'applicazione non deve ricaricare completamente ogni volta che si naviga tra le diverse pagine, il che significa che la navigazione all'interno dell'applicazione è più veloce e fluida.
+
+ - Migliore gestione degli stati: routerLink consente all'applicazione di gestire lo stato della navigazione all'interno dell'applicazione in modo più efficiente e preciso, il che significa che gli utenti possono navigare all'interno dell'applicazione in modo più intuitivo e coerente.
+
+ - Possibilità di passare parametri: routerLink consente di passare parametri tra le diverse pagine dell'applicazione in modo facile e intuitivo, il che significa che è possibile creare un'esperienza utente più personalizzata e dinamica.
+ 
+ ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+  RouterLinkActive  &  RouterLinkActiveOption
+  
+  
+ RouterLinkActive è una speciale directive di Angular che ci permette di attivare una classe quando il routing sulla pagina in cui lo stiamo applicando è attivo, ovvero quando siamo effettivamente sulla pagina in questione (viene usato nell'header che ci permette di effettuare il routing, per indicare qualche scheda è attiva). Questa direttiva viene utilizzata insieme alla direttiva routerLink per definire i link delle rotte all'interno della tua applicazione Angular. La direttiva routerLink viene utilizzata per navigare tra le diverse pagine dell'applicazione, mentre la direttiva RouterLinkActive viene utilizzata per applicare uno stile specifico al link corrente.
+ 
+ Ad esempio:
+ 
+ <ul class="nav nav-tabs">
+        <li role="presentation" routerLinkActive="active" ><a routerLink="/">Home</a></li>
+        <li role="presentation" routerLinkActive="active" ><a routerLink="/servers">Servers</a></li>
+        <li role="presentation" routerLinkActive="active" ><a routerLink="/user">Users</a></li>
+      </ul>
+	  
+In questo caso attiviamo la classe css di bootstrap active quando l'utente arriva alla pagine in questione, cioè se l'utente arriverà alla pagina server il routerLinkActive verrà attivato solo per qual singolo elemento e disattivato per tutti gli altri.
+
+routerLinkActiveOptions ti consente di specificare le opzioni per controllare il comportamento di routerLinkActive. Ad esempio, puoi definire una classe CSS personalizzata da aggiungere all'elemento HTML quando la sua route corrispondente è attiva, o specificare se la classe deve essere aggiunta solo quando la route è esattamente uguale all'URL corrente o quando fa parte della gerarchia della route.
+
+Ad esempio abbiamo settato un opzione che mi attiva il routerLinkActive solo se l'indirizzo inserito è uguale alla route sulla quale stiamo attivando la proprietà, in questo caso avremo il seguente codice: 
+
+<li role="presentation" routerLinkActive="active" [routerLinkActiveOptions]="{
+          exact: true
+        }"><a routerLink="/">Home</a></li>
+        <li role="presentation" routerLinkActive="active" ><a routerLink="/servers">Servers</a></li>
+        <li role="presentation" routerLinkActive="active" ><a routerLink="/user">Users</a></li>
+		
+Pertanto la classe routerLinkActive verrà attivata unicamente quanto il routerLinkActiveOption verrà soddisfatto, ovvero quando l'indirizzo url corrisponderà esattamente al path dell' routing in questione ovvero "/".
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Programmatical router:
+
+E' possibile anche effettuare il routing fra le pagine in maniera programmatica, ad esempio se si clicca su un bottone si viene reindirizzati ad un altra pagina tramite il routing di Angular, per effettuare ciò basta importare nel costruttore private route: Route e usare il suo metodo navigate dandogli come parametro il path della pagine che vogliamo raggiungere fra parentesi quadre: Ecco un esempio:
+
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+
+@Component({
+  selector: 'app-home',
+  templateUrl: './home.component.html',
+  styleUrls: ['./home.component.css']
+})
+export class HomeComponent implements OnInit {
+
+  constructor(private router: Router) { }
+
+  ngOnInit() {
+  }
+
+  renderToServer(){
+    this.router.navigate(["/servers"]);
+  }
+}
+
+
+quando il bottone presente nell'html viene cliccato si viene reindirizzati all'route server.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Programmatical router with relative path:
+
+@Component({
+  selector: 'app-home',
+  templateUrl: './home.component.html',
+  styleUrls: ['./home.component.css']
+})
+export class HomeComponent implements OnInit {
+
+  constructor(private router: Router, private route: ActivatedRoute) { }
+
+  ngOnInit() {
+  }
+
+  renderToServer(){
+    this.router.navigate(["/servers"]);
+  }
+
+  renderToServerWithRelativePath(){
+    this.router.navigate(["servers"], {relativeTo: this.route});
+  }
+}
+
+aggiunge al costruttore un oggetto ActivatedRoute che specifica al router quale indirizzo correttamente selezionare.
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Passare dati al routing e fetchare tali dati per stamparli:
+
+const RoutingPage = [
+  {
+    path: '',
+    component: HomeComponent,
+  },
+  {
+    path: 'users',
+    component: UsersComponent,
+  },
+  {
+    path: 'user/:id/:name',
+    component: UserComponent,
+  },
+  {
+    path: 'servers',
+    component: ServersComponent,
+  },
+];
+
+in questo array di path, abbiamo un path specifico user che in seguito ha un id e un name, tali campi verranno inseriti dall'utente nell'indirizzo.
+Per fetchare tali dati e visualizzarli o renderizzarli, nella component a cui quel path è diretta perciò UserComponent avremo: 
+
+@Component({
+  selector: 'app-user',
+  templateUrl: './user.component.html',
+  styleUrls: ['./user.component.css']
+})
+export class UserComponent implements OnInit {
+  user: {id: number, name: string};
+
+  constructor(private route: ActivatedRoute) { }
+
+  ngOnInit() {
+    this.user = {
+      id: this.route.snapshot.params['id'],
+      name: this.route.snapshot.params['name']
+    }
+  }
+
+}
+
+Un costruttore con all'intenro un ActivatedRoute che tramite lo snapshot ci permette di salvare i parametri di due variabili che compongono un oggetto.
+
+
+NOZIONE IMPORTANTE E CORRETTA APPLICAITONE DEL FATCH DEL PROGRAMATIC ROUTER:
+	
+	Tale porzione di codice va bene unicamente per il primo prelievo dei dati tramite il routing, perciò alla prima richeista che l'utente fa a tale'indirizzo con tali dati ma se noi provassimo ad aggiornare tali dati mediante una nuova linkedRoute verrebbero unicamente aggionrati nell'url ma this.user continuerà a contenere i dati iniziali.
+	  
+	this.user = {
+      id: this.route.snapshot.params['id'],
+	   name: this.route.snapshot.params['name'];
+    } 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+	In questo caso invece fetchiamo i dati mediante un observable asincrono, che rimane in ascolto e appana vede che viene effettuata una nuova linkedRoute con dei nuovi parametri li prende e li setta alle variabili dell'ggetto user.
+			 this.route.params.subscribe((params: Params) => {
+				this.user.id = params['id'];
+				this.user.name = params['name'];
+			})
+	
+  
+  
+  
+  PER FUNZIONARE CORRETTAMENTE SERVONO ENTRAMBI I METODI, IL PRIMO VIENE ESEGUITO LA PRIMA VOLTA CHE SI EFFETTUA LA RICHIESTA, IL SECONDO INVECE PER AGGIORNARE I DATI IN MANIERA DINAMICA DURANTE L'ESECUZIONE DEL CODICE.
+  
+  ngOnInit(){
+  this.user = {
+      id: this.route.snapshot.params['id'],
+	   name: this.route.snapshot.params['name'];
+    } 
+	
+	this.route.params.subscribe((params: Params) => {
+				this.user.id = params['id'];
+				this.user.name = params['name'];
+			})
+  }
+  
+  
+  
+    NOTA IMPROTANTE: Angular se la vede da solo ad effettuare la destroy del params quando ha terminato la subscribe, ovvero la subscribe rimane sempre in memoria in Angular ma ciò che genera viene distrutto e ricreato ogni qual volta ne necessitiamo. In questo caso params non rimane in memoria ma viene distrutto e ricreato quando viene effettuato l'OnInit. Ma in questo caso Angular lo fa automaticamente se volessimo farlo manualmente dovremmo improtare l'hook OnDestroy e creare un oggetto parameter: Subscription; e successivamente nel OnDestroy effettuare l'unsubscibe. CODICE DA AGGIUNGERE AL CODICE PRECEDENTE.
+    
+	parameter: Subscription;
+  
+	ngOnDestroy(): void {
+		// this.parameter.unsubscribe();
+	}
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+AGGIUNGERE QUERY PARAM ALLA RICHEISTA E IL FREGMENT:
+ <a
+        [routerLink]="['/servers', 10, 'edit']"
+        [queryParams]="{allowEdit: '1'}"
+        fragment="loading"
+        class="list-group-item"
+        *ngFor="let server of servers">
+        {{ server.name }}
+      </a>
+	 CLICCANDO SUL tag <a> genereremo il seguente Link: http://localhost:4200/servers/10/edit?allowEdit=1#loading;
+	 
+AGGIUNGERE QUERY PARAM ALLA RICHEISTA E IL FREGMENT TRAMITE CODICE TS:
+	
+	renderToServer(id: number){
+    this.router.navigate(["/servers", id, 'edit'], {queryParams: {allowEdit: '1'}, fragment: 'Loading'});
+  }
+  
+  Tale metodo viene attivato tramite un evento click e automaticamente a seconda dell'id passato reinderizzerà all'url http://localhost:4200/servers/10/edit?allowEdit=1#Loading (supponendo che l'id sia 10)
+#################################################################################################################################################
+
