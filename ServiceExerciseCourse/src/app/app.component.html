@@ -1,0 +1,23 @@
+<main class="mainSec">
+  <div class="prova">
+    <h1>Active User</h1>
+    <app-active-user
+      *ngFor="let user of userActive; let i = index"
+      [id]="i"
+      [name]="user.name"
+      [status]="user.state"
+    ></app-active-user>
+  </div>
+  <hr>
+  <div>
+    <h1>Inactive User</h1>
+    <app-inactive-user
+      *ngFor="let user of userInactive; let i = index"
+      [id]="i"
+      [name]="user.name"
+      [status]="user.state"
+    >
+    </app-inactive-user>
+  </div>
+  <button class="miaMadre" #bottoncino (mouseover)="ciaociao($event)">TRY TO CLICK ME</button>
+</main>

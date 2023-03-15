@@ -1,0 +1,12 @@
+<ng-content></ng-content> 
+<div class="row">
+    <div class="col-xs-10">
+        <app-shopping-edit></app-shopping-edit>
+        <hr>
+        <ul class="list-group">
+            <a goodDirective [colorSettingOfUser]="'#ECECEC'" [defaultColor]="'black'" class="list-group-item"  *ngFor="let ingredient of ingredientsArr" (click)="passTheIngredients(ingredient)"> {{ingredient.name}} ({{ingredient.amount}})</a>
+        </ul>
+    </div>
+</div>
+
+

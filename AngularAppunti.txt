@@ -1,0 +1,865 @@
+installare cli angular = npm install -g @angular/cli
+creare nuovo progetto angular = ng new {nomeProgetto} --no-strict (disattivare la strict mode per ore, serve per migliorare la manuntenzione del codice)
+installare bootsrap (spostarsi nella cartella del progetto appena creato) = npm install --save bootstrap@3
+aggiungere bootstrap all'interno di styles[] di angular.json specificando il percorso in cui è installato, di solito = "styles": [
+              "src/styles.css",
+              "node_modules/bootstrap/dist/css/bootstrap.min.css"
+            ],
+in app.module.ts inserire in declaretions ogni componente creata e importare FormsModule: esempio di app.module.ts =
+#################################################################
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import {HeaderComponent} from './Header/header.component'
+import { AppComponent } from './app.component';
+import { FormsModule } from '@angular/forms';
+import { RecipesComponent } from './recipes/recipes.component';
+@NgModule({
+  declarations: [
+    AppComponent,
+    HeaderComponent,
+    RecipesComponent
+  ],
+  imports: [
+    BrowserModule,
+    FormsModule
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+################################################################
+
+creare un nuovo component =  ng g c {nomeComponent} --skip-tests
+
+
+NOTE ANGULAR:
+
+
+#################################################################################################################################################
+### INPUT
+Decorator In Angular, l'@Input() decorator viene utilizzato per passare i dati da un componente genitore a un componente figlio. In Angular non è possibile accedere agli elementi di una classe al di fuori del component, ma con il decorator @Input possiamo permetterlo. è possibile anche settare il valore da dare all'input, tipo il name di Spring, e nel caso non venga settato prenderà automaticamente il nome che abbiamo dato all'elemento. 
+Nella component figlio creiamo un elemento @Input() ad esempio @Input('nomeCustomPerInput') datoRicevutoDaPadre: string; (abbiamo supposto che la component figlio debba ricevere un dato stringa dalla component padre);
+
+Nell'html della component padre quando andremo a istanziare la component figlio passaremo il dato che si desidera dal padre al figlio in questa maniera: 
+supponendo la component figlio si chiami app server:
+<app-server [nomeCustomPerInput]="variabilePresenteNelPadreDaInviare"  ></app-server>
+
+#################################################################################################################################################
+### OUTPUT
+
+@Output ci permette di passare un elemento presente in un component child, ad un component padre come avviene tutto ciò:
+1) bisogna creare un EventEmitter e taggarlo con @Output ad esempio:
+@Output('eventoDaEmettere') eventEmitter = new EventEmitter<tipologiaDiDatoDaPassare>();
+tale event verrà emesso quando si vorrà, ad esmepio supponiamo che tale eventEmitter debba emettere come dato il nome dell'soggetto inserito nel form, pertanto una stringa. Potremo settarlo per emetterlo quando un utente clicca su un determinato bottone. Per fare ciò: 
+
+buttonClicked(){
+
+this.eventEmitter.emit(this.name);
+}
+Ora il nostro component child avrà emesso il dato, ora toccherà al component padre rimanere in ascolto dell'emissiione di tale dato e prenderselo. Questo avviene nell'html mappando il valore emesso con una variabile o passandolo come parametro di una funzione, in tale maniera:
+
+<app-shopping-edit (variableUpdated)="onVariableUpdated($event)"></app-shopping-edit>
+Ad esempio supponiamo che l'elemento figlio si chiami <app-shopping-edit> il component padre si mette in ascolto e quando viene emesso il valore viene passato al metodo presente nel componente padre "onVariableUpdated" che farà le sue logiche con tale dato. Nel caso in cui si voglia passare tale dato ad un component ancora più su, bisognerà ripetere la procedura in questo caso mettendo l'output sulla component che ha appena ricevuto il dato emesso.
+##############################################################################################################################################
+
+
+#################################################################################################################################################
+### NG CONTENT
+Prendiamo esempio questo codice html di una component padre: 
+
+<div class="container" >
+  <div class="row">
+    <div class="col-xs-12">
+      <h1>WELCOME TO ANGULAR</h1>
+      <app-server [cicciobello]="ciao" (bhoProviam)="buttonClicked($event)" ></app-server>
+    </div>
+  </div>
+</div>
+
+App server è una component figlia, se volessimo inserire del codice all'interno di app-server senza però inserirlo dentro il suo templete ma fra le sue parentesi di apertura e chiusura ad esempio: ù
+
+ <app-server [cicciobello]="ciao" (bhoProviam)="buttonClicked($event)" >
+	<h1>stampa qualcosa </h1>
+ </app-server>
+ 
+Ciò non è possibile in quanto tale h1 andrebbe perso. Per permettere ciò bisogna inserire all'interno del html del component figlio il tag <ng-content></ng-content> che permette ad una component padre di inserire codice fra i tag della component child nel suo stesso templete. 
+##############################################################################################################################################
+
+#################################################################################################################################################
+### ViewChild()
+
+Con viewChild è un altro modo per accedere alle proprietà di un component child, ma può essere anche usato dal component stesso per mapparsi le referance nel template. Supponiamo di avere un input text con una referance chiamta #inputName:
+<input type="text" #inputName>
+nel file ts dello stesso component, possiamo salvarci quel tag html mappato con una referance in una variabile ts, così:
+
+@ViewChild('inputName') inputNameElement: ElementRef; //è una variabile tipizzata di tipo ElementRef
+
+per stampare il valore dell'elemento basta fare:
+console.log(inputNameElement.nativeElement.value); //abbiamo effettuato l'accesso al valore della variabile.
+
+Come detto precedentemente può anche essere usato però per permettere ad una component padre di accedere a delle properietà o metodi del component figlio, basta fare la @viewChild sulla component stessa. Ad esempio se la component figlio ha la classe ts che si chiama ChildTsComponent, nel file ts della component padre scriveremo:
+@ViewChild(ChildTsComponent) childComponent: ChildTsComponent;
+in tal caso avremo tutto il component figlio da poter sfruttare nel component padre e potremo accedere al valore delle sue properietà e metodi.
+ad esempio per stampare di nuovo l'input stampato precedentemente bisogna scrivere:
+console.log(this.childComponent.inputNameElement.nativeElement.value);
+##############################################################################################################################################
+
+
+#################################################################################################################################################
+### @ContentChild()
+
+ContentChild permette ad un component child di accedere agli elementi html che possiedono una referance che vengono creati dentro l'ng-content. Esempio abbiamo un component padre con questo codice: 
+---
+<ng-content></ng-content> 
+<div class="row">
+    <div class="col-xs-10">
+        <app-shopping-edit [Array]="ingredientsArr" (variableUpdated)="onVariableUpdated($event)">
+
+            <h1 #amiciPostale>CIAO AMICI DELLA POSTALE</h1>
+            <H1 #amiciMadama>CIAO AMICI DELLA MADAMA</H1>
+        </app-shopping-edit>
+        <hr>
+        <button (click)="mama()">Click me for try</button>
+        <ul class="list-group">
+            <a class="list-group-item" style="cursor: pointer" *ngFor="let ingredient of ingredientsArr"> {{ingredient.name}} ({{ingredient.amount}})</a>
+        </ul>
+    </div>
+</div>
+---
+La component child ha attivato l'ng-content che ci permette di scrivere codice fra i suoi tag <app-shopping-edit> infatti sono presenti due tag h1. Per accedere a tali properietà è opportuno non utilizzare il viewChild in quanto darebbe errore ma utilizzare il viewContent, che fa la medesima cosa ma è usato specificatamente con tutti gli elementi creati tramite ng content. 
+
+nel file ts della component app-shopping-edit scriveremo ciò per avere il valore dell'attributo html: 
+@ViewChild('amiciPostale') namee: ElementRef;
+#################################################################################################################################################
+
+
+##############################################################################################################################################
+
+##############################################################################################################################################
+HOOK 
+
+Gli hook in Angular sono funzioni che vengono eseguite automaticamente in determinati momenti del ciclo di vita di un componente. In altre parole, gli hook sono metodi predefiniti che vengono richiamati automaticamente da Angular quando accadono determinati eventi durante il ciclo di vita di un componente.
+
+Gli hook in Angular sono di diversi tipi, e ogni tipo di hook viene eseguito in un momento specifico del ciclo di vita del componente. Ad esempio, alcuni degli hook più comuni in Angular sono:
+
+- ngOnInit(): viene eseguito subito dopo che il componente è stato inizializzato, ovvero dopo che sono stati stabiliti tutti i binding tra le proprietà e le view del componente.
+- ngOnDestroy(): viene eseguito prima che il componente venga distrutto, ovvero quando il componente non è più utilizzato all'interno dell'applicazione.
+- ngOnChanges(): viene eseguito ogni volta che una delle proprietà di input del componente cambia.
+
+all'interno di questi hook possono essere inseriti dei metodi che pertanto verranno eseguiti ogni qual volta l'hook si attiverà, ad esempio se vogliamo reindirizzare una lista di utenti ottenuta da un server remoto appena si carica l'applicazione utilizzereo ngOnInit() e reindirizzeremo la lista non appena la component sarà caricata.
+
+Maggiori dettagli degli hook: 
+
+Gli "hook" in Angular sono metodi predefiniti che vengono chiamati in determinati momenti del ciclo di vita di un componente o di una direttiva. Questi hook consentono di eseguire azioni specifiche in base allo stato del componente/direttiva durante il suo ciclo di vita.
+
+Di seguito ti presento i principali hook di Angular:
+
+ngOnChanges - Questo hook viene chiamato quando il componente/direttiva riceve input dai genitori. Può essere usato per eseguire azioni specifiche quando gli input cambiano.
+Esempio: Immagina di avere un componente "counter" che riceve un input "count" dal componente genitore. Quando il valore di "count" cambia, il componente "counter" potrebbe aggiornare il suo stato interno per riflettere il nuovo valore.
+
+ngOnInit - Questo hook viene chiamato quando il componente/direttiva viene inizializzato. Può essere usato per eseguire azioni specifiche all'avvio del componente/direttiva.
+Esempio: Immagina di avere un componente "user-list" che deve recuperare l'elenco degli utenti da un servizio all'avvio. Il componente potrebbe utilizzare il metodo ngOnInit per chiamare il servizio e recuperare l'elenco degli utenti.
+
+ngDoCheck - Questo hook viene chiamato quando viene rilevato un cambiamento nell'applicazione e viene eseguito il controllo di cambiamenti. Può essere usato per eseguire azioni specifiche quando si desidera eseguire un controllo di cambiamenti personalizzato.
+Esempio: Immagina di avere un componente "search" che deve eseguire una ricerca personalizzata ogni volta che viene rilevato un cambiamento nell'input di ricerca. Il componente potrebbe utilizzare il metodo ngDoCheck per eseguire la ricerca personalizzata ogni volta che viene rilevato un cambiamento.
+
+ngOnDestroy - Questo hook viene chiamato quando il componente/direttiva viene distrutto. Può essere utilizzato per eseguire azioni specifiche prima che il componente/direttiva venga distrutto.
+Esempio: Immagina di avere un componente "timer" che deve interrompere il timer prima che il componente venga distrutto. Il componente potrebbe utilizzare il metodo ngOnDestroy per interrompere il timer prima che il componente venga distrutto.
+
+Questi sono solo alcuni esempi di hook di Angular. Ogni hook ha uno scopo specifico e può essere utilizzato in modo creativo per personalizzare il comportamento del componente/direttiva.
+##############################################################################################################################################
+
+#################################################################################################################################################
+Directive 
+
+Le direttive in Angular sono un meccanismo per estendere la sintassi HTML e aggiungere funzionalità dinamiche al DOM (Document Object Model) durante la fase di compilazione del template.
+
+Ci sono diversi tipi di direttive in Angular:
+
+- Direttive strutturali: modificano la struttura del DOM aggiungendo, rimuovendo o sostituendo elementi. Esempi di direttive strutturali includono ngIf, ngFor, ngSwitch.
+- Direttive di attributo: modificano gli attributi degli elementi del DOM. Esempi di direttive di attributo includono ngClass, ngStyle.
+- Direttive di componente: definiscono un componente personalizzato che può essere riutilizzato all'interno del template. (I classici component)
+
+E' possibile crearsi delle directive custom, basta creare una classe ts e mapparla non con component ma con Directive: 
+
+@Directive({
+    selector: '[goodDirective]'
+})
+export class GoodDirective {}
+
+in questo esempio abbiamo creato la classe GoodDirective che non è una component ma è una directive che applicheremo a qualsiasi tag html e nel quale potremo settare la logica che ci interessa.  
+
+ ######## NOTA IMPORTANTE: ogni singola directive va aggiunta nel app.module.ts e va aggiunta alle declarations.
+ 
+ Esempio di una directive custom che in caso di passaggio con il mouse modifica il colore del background: 
+ 
+ @Directive({
+    selector: '[goodDirective]'
+})
+export class GoodDirective {
+    defaultColor: string = "transparent"; 
+    @Input() colorSettingOfUser: string;
+   
+    constructor(private refElement: ElementRef, private renderer: Renderer2){
+
+    }
+   //############## FIRST METHOD
+
+   /*  @HostListener('mouseenter') onMouseEnter(eventData: Event) {
+        this.renderer.setStyle(this.refElement.nativeElement, 'background-color', 'green');
+        this.renderer.setStyle(this.refElement.nativeElement, 'color', 'white');
+    }
+
+    @HostListener('mouseleave') onMouseLeave(eventData: Event) {
+        this.renderer.setStyle(this.refElement.nativeElement, 'background-color', 'transparent')
+        this.renderer.setStyle(this.refElement.nativeElement, 'color', 'black');
+    }
+     */
+
+       //############## SECOND METHOD
+
+       @HostBinding('style.backgroundColor') backgroundColor: string = this.defaultColor;
+
+       @HostListener('mouseenter') onMouseEnter(eventData: Event) {
+        this.backgroundColor = this.colorSettingOfUser
+    }
+
+     @HostListener('mouseleave') onMouseLeave(eventData: Event) {
+        this.backgroundColor = this.defaultColor
+        }
+
+}
+
+SPIEGAZIONE DECORATOR:
+------------------------------------------------------------------------------------------------------------------------
+@HostBinding host binding ci permette di mappare un valore del tag html a cui stiamo applicando la directive in una variabile typescript, in modo da poterla modificare dinamicamente ad esempio in questo caso stiamo mappando il background dell'elemento html in una stringa: 
+
+@HostBinding('style.backgroundColor') backgroundColor: string;
+
+ora possiamo creare un metodo che in base a determinate logiche modifichi il background semplicemente attribuendo un valore alla variabile.
+
+se volessimo che sia l'utente stesso a passarci la proprietà da settare al background allora dovremo crearci anche una variabile di input: 
+
+ @Input() colorSettingOfUser: string; 
+
+in questo caso quando applicheremo la directive ad un elemento html potremo passare il valore alla variabile taggata come input.
+supponiamo che la directive si chiami appHighlight in questo caso nell'html scriveremo: 
+
+< div appHighlight [colorSettingOfUser]="'yellow'"> 
+------------------------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------------------------
+@HostListener
+
+@HostListener è un decorator di Angular che consente di ascoltare gli eventi su un elemento DOM in un componente. Questo decorator può essere utilizzato per aggiungere un listener per un evento, come il clic di un pulsante o la pressione di un tasto, e quindi eseguire una funzione quando quell'evento viene attivato.
+
+@HostListener('click') onClick() {
+    console.log('Button clicked!');
+  }
+  
+In questo caso stiamo ascoltando il click dell'elemento html, quando verrà cliccato allora verrà eseguito il metodo presente nell'host listner
+
+@HostListener può essere utilizzato per ascoltare molti altri eventi, come 'keydown', 'mouseenter', 'mouseleave', ecc. L'evento da ascoltare viene specificato come argomento del decorator.
+------------------------------------------------------------------------------------------------------------------------
+#################################################################################################################################################
+
+#################################################################################################################################################
+SERVICE AND DIPENDENCY INJECTION
+
+in angular i service proprio come in spring, sono classi che si occupano di sviluppare una determinata logica e che possono essere riutilizzate nel codice ovunque vogliamo. In angular i service sono semplici classi ts, non necessitano di alcun decorator a differenza delle component o delle directive che invece gli richiedono. 
+
+i service come detto prima vengono iniettati nel codice, qui rientra il concetto di dipendency injection che è alla base di framework come angular e spring, semplicemente non siamo noi a istanziarci il service che ci serve ma ci viene iniettato direttamente da angular. Come avviene ciò:
+ 
+basta indicarlo nel costruttore della classe nel quale vogliamo utilizzare il nostro service. Esempio:
+
+constructor(private logger: LoggerRender){
+    
+  }
+  
+angular quando builderà la nostra component capirà che avremo necessita del service loggerRender e ce lo innietterà, ovviamente ciò non basta affinchè la dipendency funziona ma bisogna specificare ad Angular che service effettivamente deve inniettare, da dove se lo deve andare a prendere tale service, ciò avviene indicando nella struttura del component una nuova proprietà chiamata providers: [] nel quale al suo interno andremo a indicare tutti i service che angular dovrà iniettare. 
+Esempio:
+
+@Component({
+  selector: 'app-new-account',
+  templateUrl: './new-account.component.html',
+  styleUrls: ['./new-account.component.css'],
+  providers: [LoggerRender]
+})
+
+Codice completo: 
+
+import { Component, EventEmitter, Output } from '@angular/core';
+import { LoggerRender } from '../account/LogRender.service';
+
+@Component({
+  selector: 'app-new-account',
+  templateUrl: './new-account.component.html',
+  styleUrls: ['./new-account.component.css'],
+  providers: [LoggerRender]
+})
+export class NewAccountComponent {
+  @Output() accountAdded = new EventEmitter<{name: string, status: string}>();
+
+  constructor(private logger: LoggerRender){
+    
+  }
+  onCreateAccount(accountName: string, accountStatus: string) {
+    this.accountAdded.emit({
+      name: accountName,
+      status: accountStatus
+    });
+    this.logger.renderingLog("The name of account: " + accountName + " the status: " + accountStatus);
+  }
+}
+
+IMPORTANTE NOTA SUI SERVICE:
+Supponiamo di avere un service, un component child ed un comoponent padre. Se aggiungessimo ad entrambi nell'array providers locato nel component , il service automaticamente angualr creerà due istanze diverse del service e non innietterà la medesima, nel caso si volesse utilizzare la stessa istanza del service basta iniettarlo tramite providers solo nel component padre, e nel component figlio richiamarselo solo tramite il costruttore (senza aggiungerlo anche a questo componet all'array providers, perchè in questo caso verrebbe sovrascritto). Ovviamente se vogliamo che tutto il nostro progetto utilizzi la medesima istanza del service dobbiamo iniettarlo nel provider dell'appModule (e non della component padre come app component) e richiamarlo nei component mediante costruttore.
+
+INIETTARE SERVICE NEI SERVICE:
+Nel caso in cui volessimo utilizzare un service in un service la situazione cambia rispetto all'esempio fatto precedentemente. In quanto un service per essere inniettato necessita obbligatoriamente di alcuni metaDati, che sono presenti nei component e nelle directive. Per quanto riguarda invece il service (che è una semplice classe ts) per poter iniettare un service al suo interno dobbiamo taggare la classe con @injectable(). Successivamente basta creare il classico costruttore per i service, per poterlo utilizzare. Importante dalle versioni precedenti di Angular bisognava taggare con @Injectable() unicamente il service a cui si doveva inniettare il service, e non il service che veniva inniettato. Dalle versioni sussessive di angular è necessario aggiungere @injectable() ad entrambi i service, sia chi viene iniettato sia chi inietta.
+
+PASSARE DATI FRA COMPONENT TRAMITE I SERVICE:
+Per passare i dati trimite i service fra le varie component possiamo usare due principali elementi di Angular, il subscribe e l'Event Emitter. Nel service ci creiamo un EventEmitter che emetterà i dati che necessitiamo emettere (tali dati verranno passati dal component child che chiamerà l'emitter del service) mentre il component padre rimarrà in ascolto dell'emit del service. 
+In pratica il component effettua la subscribe all'emitter della service e appena l'emitter invia i dati, il component prenderà tali dati e verrà eseguita della logica all'interno scritta da noi, molto semplicemente potremmo salvare tali dati emessi dal service in una variabile.
+
+Codice:
+	ingredientrEmitter = new EventEmitter<Ingredients[]>();  //emitter del service
+	
+	emitIngredients(ingredients: Ingredients[]){	 //In questo caso aggiungiamo all'array del service dei nuovi ingredienti provenienti dal component che chiama 
+		this.ingredientsArr.push(...ingredients);	 //questo metodo
+		this.ingredientrEmitter.emit(this.ingredientsArr);
+	} 
+	
+	
+	
+	ngOnInit(): void {		//Il metodo in questione invece appartiene al component padre che rimane in ascolto trmite il subscribe dell'evento emesso e si salva i 
+		this.recipeService.recipeEmitter.subscribe((recipe: Recipe) => {	//dati in una variabile.
+		this.recipeToPass = recipe;
+		});
+		console.log(this.recipeToPass);
+	}
+#################################################################################################################################################
+
+#################################################################################################################################################
+ROUTING
+
+Il routing in Angular è il processo di gestione della navigazione all'interno di un'applicazione Angular, consentendo agli utenti di spostarsi tra diverse pagine o viste dell'applicazione senza dover ricaricare completamente la pagina. Il routing in Angular ci permette di navigare fra i diversi component come se fossero diverse pagine web, locate in diversi indirizzi ma ovviamente che risiedono tutte in una singola applicazione (ovvero appunto singoli component, e ci muoviamo fra di essi tramite diversi indirizzi url). Per permettere il routing in angular dobbiamos ettare in AppComponent nel file ts, un array di oggetti con all'interno il path dell'indirizzo e che component è associato a quel path: 
+
+const RoutingPage = [
+  {
+    path: '',
+    component: HomeComponent,
+  },
+  {
+    path: 'user',
+    component: UsersComponent,
+  },
+  {
+    path: 'servers',
+    component: ServersComponent,
+  },
+];
+
+successivamente aggiungiamo alle imports il modulo di routing di angular (e gli passiamo il nostro array di oggetti come parametro):
+
+ imports: [BrowserModule, FormsModule, RouterModule.forRoot(RoutingPage)],
+ 
+Ora nella nostra homepage non inseriretimo la varie component come abbiamo sempre fatto, ma avremo una singola directive chiamata <router-outlet> la quale si occuperà di mostrarci la component user all'indirizzo '/user', la component server all'indirizzo 'servers' e la component home sarà la prima a venire reindirizzata in quanto non presenta alcun path speicifico.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Ovviamente per navigare all'interno della pagina non necessitiamo di inserire gli indirizzi url manualmente ma avremo un header che ci permetterà di muoverci fra le differenti component della nostra pagina web, l'header sarà composto così:
+
+<ul class="nav nav-tabs">
+        <li role="presentation" class="active"><a routerLink="/">Home</a></li>
+        <li role="presentation"><a routerLink="/servers">Servers</a></li>
+        <li role="presentation"><a routerLink="/user">Users</a></li>
+</ul>
+	  
+La domanda sorge spontanea, perchè usare routerLinks invece del classico a href per effettuare il routing fra le pagine... semplicemente perchè a differenza di un link normale (<a href="">), routerLink non effettua una nuova richiesta al server, ma cambia semplicemente la visualizzazione dell'URL all'interno della barra degli indirizzi del browser e aggiorna la visualizzazione della pagina nell'applicazione.
+
+VANTAGGI ROUTER LINKS:
+
+ - Maggiore efficienza: routerLink non effettua una nuova richiesta al server per caricare la nuova pagina, il che significa che il carico sul server e la larghezza di banda sono ridotti.
+
+ - Maggiore velocità: grazie all'utilizzo di routerLink, l'applicazione non deve ricaricare completamente ogni volta che si naviga tra le diverse pagine, il che significa che la navigazione all'interno dell'applicazione è più veloce e fluida.
+
+ - Migliore gestione degli stati: routerLink consente all'applicazione di gestire lo stato della navigazione all'interno dell'applicazione in modo più efficiente e preciso, il che significa che gli utenti possono navigare all'interno dell'applicazione in modo più intuitivo e coerente.
+
+ - Possibilità di passare parametri: routerLink consente di passare parametri tra le diverse pagine dell'applicazione in modo facile e intuitivo, il che significa che è possibile creare un'esperienza utente più personalizzata e dinamica.
+ 
+ ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+  RouterLinkActive  &  RouterLinkActiveOption
+  
+  
+ RouterLinkActive è una speciale directive di Angular che ci permette di attivare una classe quando il routing sulla pagina in cui lo stiamo applicando è attivo, ovvero quando siamo effettivamente sulla pagina in questione (viene usato nell'header che ci permette di effettuare il routing, per indicare qualche scheda è attiva). Questa direttiva viene utilizzata insieme alla direttiva routerLink per definire i link delle rotte all'interno della tua applicazione Angular. La direttiva routerLink viene utilizzata per navigare tra le diverse pagine dell'applicazione, mentre la direttiva RouterLinkActive viene utilizzata per applicare uno stile specifico al link corrente.
+ 
+ Ad esempio:
+ 
+ <ul class="nav nav-tabs">
+        <li role="presentation" routerLinkActive="active" ><a routerLink="/">Home</a></li>
+        <li role="presentation" routerLinkActive="active" ><a routerLink="/servers">Servers</a></li>
+        <li role="presentation" routerLinkActive="active" ><a routerLink="/user">Users</a></li>
+      </ul>
+	  
+In questo caso attiviamo la classe css di bootstrap active quando l'utente arriva alla pagine in questione, cioè se l'utente arriverà alla pagina server il routerLinkActive verrà attivato solo per qual singolo elemento e disattivato per tutti gli altri.
+
+routerLinkActiveOptions ti consente di specificare le opzioni per controllare il comportamento di routerLinkActive. Ad esempio, puoi definire una classe CSS personalizzata da aggiungere all'elemento HTML quando la sua route corrispondente è attiva, o specificare se la classe deve essere aggiunta solo quando la route è esattamente uguale all'URL corrente o quando fa parte della gerarchia della route.
+
+Ad esempio abbiamo settato un opzione che mi attiva il routerLinkActive solo se l'indirizzo inserito è uguale alla route sulla quale stiamo attivando la proprietà, in questo caso avremo il seguente codice: 
+
+<li role="presentation" routerLinkActive="active" [routerLinkActiveOptions]="{
+          exact: true
+        }"><a routerLink="/">Home</a></li>
+        <li role="presentation" routerLinkActive="active" ><a routerLink="/servers">Servers</a></li>
+        <li role="presentation" routerLinkActive="active" ><a routerLink="/user">Users</a></li>
+		
+Pertanto la classe routerLinkActive verrà attivata unicamente quanto il routerLinkActiveOption verrà soddisfatto, ovvero quando l'indirizzo url corrisponderà esattamente al path dell' routing in questione ovvero "/".
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Programmatical router:
+
+E' possibile anche effettuare il routing fra le pagine in maniera programmatica, ad esempio se si clicca su un bottone si viene reindirizzati ad un altra pagina tramite il routing di Angular, per effettuare ciò basta importare nel costruttore private route: Route e usare il suo metodo navigate dandogli come parametro il path della pagine che vogliamo raggiungere fra parentesi quadre: Ecco un esempio:
+
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+
+@Component({
+  selector: 'app-home',
+  templateUrl: './home.component.html',
+  styleUrls: ['./home.component.css']
+})
+export class HomeComponent implements OnInit {
+
+  constructor(private router: Router) { }
+
+  ngOnInit() {
+  }
+
+  renderToServer(){
+    this.router.navigate(["/servers"]);
+  }
+}
+
+
+quando il bottone presente nell'html viene cliccato si viene reindirizzati all'route server.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Programmatical router with relative path:
+
+@Component({
+  selector: 'app-home',
+  templateUrl: './home.component.html',
+  styleUrls: ['./home.component.css']
+})
+export class HomeComponent implements OnInit {
+
+  constructor(private router: Router, private route: ActivatedRoute) { }
+
+  ngOnInit() {
+  }
+
+  renderToServer(){
+    this.router.navigate(["/servers"]);
+  }
+
+  renderToServerWithRelativePath(){
+    this.router.navigate(["servers"], {relativeTo: this.route});
+  }
+}
+
+aggiunge al costruttore un oggetto ActivatedRoute che specifica al router quale indirizzo correttamente selezionare.
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Passare dati al routing e fetchare tali dati per stamparli:
+
+const RoutingPage = [
+  {
+    path: '',
+    component: HomeComponent,
+  },
+  {
+    path: 'users',
+    component: UsersComponent,
+  },
+  {
+    path: 'user/:id/:name',
+    component: UserComponent,
+  },
+  {
+    path: 'servers',
+    component: ServersComponent,
+  },
+];
+
+in questo array di path, abbiamo un path specifico user che in seguito ha un id e un name, tali campi verranno inseriti dall'utente nell'indirizzo.
+Per fetchare tali dati e visualizzarli o renderizzarli, nella component a cui quel path è diretta perciò UserComponent avremo: 
+
+@Component({
+  selector: 'app-user',
+  templateUrl: './user.component.html',
+  styleUrls: ['./user.component.css']
+})
+export class UserComponent implements OnInit {
+  user: {id: number, name: string};
+
+  constructor(private route: ActivatedRoute) { }
+
+  ngOnInit() {
+    this.user = {
+      id: this.route.snapshot.params['id'],
+      name: this.route.snapshot.params['name']
+    }
+  }
+
+}
+
+Un costruttore con all'intenro un ActivatedRoute che tramite lo snapshot ci permette di salvare i parametri di due variabili che compongono un oggetto.
+
+
+NOZIONE IMPORTANTE E CORRETTA APPLICAITONE DEL FATCH DEL PROGRAMATIC ROUTER:
+	
+	Tale porzione di codice va bene unicamente per il primo prelievo dei dati tramite il routing, perciò alla prima richeista che l'utente fa a tale'indirizzo con tali dati ma se noi provassimo ad aggiornare tali dati mediante una nuova linkedRoute verrebbero unicamente aggionrati nell'url ma this.user continuerà a contenere i dati iniziali.
+	  
+	this.user = {
+      id: this.route.snapshot.params['id'],
+	   name: this.route.snapshot.params['name'];
+    } 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+	In questo caso invece fetchiamo i dati mediante un observable asincrono, che rimane in ascolto e appana vede che viene effettuata una nuova linkedRoute con dei nuovi parametri li prende e li setta alle variabili dell'ggetto user.
+			 this.route.params.subscribe((params: Params) => {
+				this.user.id = params['id'];
+				this.user.name = params['name'];
+			})
+	
+  
+  
+  
+  PER FUNZIONARE CORRETTAMENTE SERVONO ENTRAMBI I METODI, IL PRIMO VIENE ESEGUITO LA PRIMA VOLTA CHE SI EFFETTUA LA RICHIESTA, IL SECONDO INVECE PER AGGIORNARE I DATI IN MANIERA DINAMICA DURANTE L'ESECUZIONE DEL CODICE.
+  
+  ngOnInit(){
+  this.user = {
+      id: this.route.snapshot.params['id'],
+	   name: this.route.snapshot.params['name'];
+    } 
+	
+	this.route.params.subscribe((params: Params) => {
+				this.user.id = params['id'];
+				this.user.name = params['name'];
+			})
+  }
+  
+  
+  
+    NOTA IMPROTANTE: Angular se la vede da solo ad effettuare la destroy del params quando ha terminato la subscribe, ovvero la subscribe rimane sempre in memoria in Angular ma ciò che genera viene distrutto e ricreato ogni qual volta ne necessitiamo. In questo caso params non rimane in memoria ma viene distrutto e ricreato quando viene effettuato l'OnInit. Ma in questo caso Angular lo fa automaticamente se volessimo farlo manualmente dovremmo improtare l'hook OnDestroy e creare un oggetto parameter: Subscription; e successivamente nel OnDestroy effettuare l'unsubscibe. CODICE DA AGGIUNGERE AL CODICE PRECEDENTE.
+    
+	parameter: Subscription;
+  
+	ngOnDestroy(): void {
+		// this.parameter.unsubscribe();
+	}
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+AGGIUNGERE QUERY PARAM ALLA RICHEISTA E IL FREGMENT:
+ <a
+        [routerLink]="['/servers', 10, 'edit']"
+        [queryParams]="{allowEdit: '1'}"
+        fragment="loading"
+        class="list-group-item"
+        *ngFor="let server of servers">
+        {{ server.name }}
+      </a>
+	 CLICCANDO SUL tag <a> genereremo il seguente Link: http://localhost:4200/servers/10/edit?allowEdit=1#loading;
+	 
+AGGIUNGERE QUERY PARAM ALLA RICHEISTA E IL FREGMENT TRAMITE CODICE TS:
+	
+	renderToServer(id: number){
+    this.router.navigate(["/servers", id, 'edit'], {queryParams: {allowEdit: '1'}, fragment: 'Loading'});
+  }
+  
+  Tale metodo viene attivato tramite un evento click e automaticamente a seconda dell'id passato reinderizzerà all'url http://localhost:4200/servers/10/edit?allowEdit=1#Loading (supponendo che l'id sia 10)
+  
+  PRESERVARE I QUERY PARAM DELLA RICHIESTA PRECEDENTE PER QUELLA SUCCESSIVA:
+  In Angular è possibile preservare i queryParam che abbiamo aggiunto per raggiungere una pagina web, ovvero quella pagina web potrà conservare i query param per poterli utilizzare per una richiesta successiva, per conservarli useremo persist mentre per aggiungerne dei nuovi e conservare comunque quei vecchi useremo merge.
+  CODICE:
+  
+  navigateToEdit() {
+    console.log(this.server.id)
+    this.serversService.emitId(this.server.id);
+    this.router.navigate(["edit"], {relativeTo: this.route, queryParamsHandling: 'preserve'});
+    }
+}
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+REINDIRIZZARE L'UTENTE QUANDO SBAGLIA RICHEISTA WILDCART ANGULAR:
+Per reindirizzare l'utente (quando inserisce un url non previsto da noi) ad una determinata pagina web possiamo nel app.module.ts settare così:
+const RoutingPage = [
+  {
+    path: '',
+    component: HomeComponent,
+  },
+  {
+    path: 'users',
+    component: UsersComponent,
+    children: [
+      {
+        path: ':id/:name',
+        component: UserComponent,
+      },
+    ],
+  },
+  {
+    path: 'servers',
+    component: ServersComponent,
+    children: [
+      {
+        path: ':id/edit',
+        component: EditServerComponent,
+      },
+      {
+        path: ':id',
+        component: ServerComponent,
+      },
+    ],
+  },
+  {
+    path: 'not-found',
+    component: PageNotFoundComponent,
+  },
+  {
+    path: '**',
+    redirectTo: '/not-found',
+  },
+];
+
+DOVE path'**' ci reinderizza alla pagina che desideriamo.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+GUARDIE E CAN ACTIVE:
+In Angular, le guardie (o guards in inglese) sono utilizzate per proteggere le rotte (routes) dell'applicazione, ovvero le pagine che l'utente può visualizzare, in base a determinati criteri.
+
+In particolare, una guardia permette di determinare se un utente può accedere a una determinata rotta oppure no. Ci sono diverse tipologie di guardie in Angular, tra cui canActivate, canActivateChild, canDeactivate, canLoad.
+
+canActivate è una delle guardie più utilizzate e viene utilizzata per proteggere le rotte principali dell'applicazione. Quando un utente tenta di accedere ad una rotta protetta, la guardia canActivate viene eseguita e determina se l'utente ha i permessi necessari per accedere alla rotta. Se l'utente non ha i permessi necessari, la guardia può impedirgli di accedere alla rotta, reindirizzandolo ad un'altra pagina o mostrando un messaggio di errore.
+
+Per utilizzare la guardia canActivate, è necessario definirla all'interno del routing module dell'applicazione, in modo che venga eseguita ogni volta che l'utente tenta di accedere ad una rotta protetta.
+
+Ad esempio, se si vuole proteggere una rotta dell'applicazione con la guardia canActivate, si può definire la rotta in questo modo:
+{ path: 'pagina-protetta', component: PaginaProtettaComponent, canActivate: [AuthGuard] }
+
+In questo caso, la rotta 'pagina-protetta' è protetta dalla guardia AuthGuard, che determina se l'utente ha i permessi necessari per accedere alla pagina. Se l'utente non ha i permessi necessari, la guardia può impedirgli di accedere alla pagina.
+
+CHAT GPT HELP:
+In Angular, CanActivate è una interfaccia che può essere implementata per definire una logica personalizzata per controllare se l'utente ha accesso a una determinata route.
+
+CODICE: 
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AuthGuard implements CanActivate {
+
+  constructor(private router: Router) { }
+
+  canActivate(
+    next: ActivatedRouteSnapshot,
+    state: RouterStateSnapshot): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
+    
+    // inserisci qui la tua logica per verificare se l'utente ha accesso alla route
+    const isAuthorized = true; // esempio
+
+    if (isAuthorized) {
+      return true; // l'utente ha accesso alla route
+    } else {
+      this.router.navigate(['/access-denied']); // reindirizza l'utente alla pagina di accesso negato
+      return false; // l'utente non ha accesso alla route
+    }
+  }
+}
+
+const routes: Routes = [
+  { path: '', component: HomeComponent },
+  { path: 'about', component: AboutComponent },
+  { path: 'contact', component: ContactComponent, canActivate: [AuthGuard] },
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+GUARDIE E CAN ACTIVE PER IL ROUTING CHILD:
+Se si vuole attivare il guard anche per i routing child di un routing padre come in questo caso, dove abbiamo: 
+ {
+    path: 'servers',
+    component: ServersComponent, canActivate: [AppGuardService],
+    children: [
+      {
+        path: ':id/edit',
+        component: EditServerComponent,
+      },
+      {
+        path: ':id',
+        component: ServerComponent,
+      },
+    ],
+  },
+  
+  servers che ha due routing child al suo interno, se volessimo unicamente attivare il guard ai ruoting child e non a quello padre non dovremmo implementare CanActive, ma CanActiveChild ecco un esempio del codice: 
+  
+  
+  @Injectable()
+export class AppGuardService implements CanActivate, CanActivateChild{
+    prova: boolean = true;
+    constructor(private authService: AuthService, private route: Router){
+
+    }
+    
+    canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean | Observable<boolean> | Promise<boolean> {
+        if(this.prova){
+            return true;
+        } else {
+            this.route.navigate(['/']);
+            return false;
+        }
+
+        /* return this.authService.isAuthenticatd().then((authenticated: boolean) => {
+            if(authenticated){
+                return true;
+            } else{
+                this.route.navigate(['/']);
+                return false;
+            }
+        }) */
+    }
+
+    canActivateChild(childRoute: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean  | Observable<boolean> | Promise<boolean> {
+        return this.canActivate(childRoute, state);
+    }
+}
+
+e a livello di modulo del ruoting non attiveremo CanActive ma CanActiveChild:
+
+{
+    path: 'servers',
+    component: ServersComponent, canActivateChild: [AppGuardService],
+    children: [
+      {
+        path: ':id/edit',
+        component: EditServerComponent,
+      },
+      {
+        path: ':id',
+        component: ServerComponent,
+      },
+    ],
+  },
+  
+  In questo caso attiveremo il guard solo per i routing child di servers e non per servers.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ANGULAR CAN DEACTIVE GUARD:
+  
+In Angular, il CanDeactivate è una guardia di navigazione che permette di controllare se l'utente può lasciare una determinata pagina o componente e navigare verso una pagina diversa. Questo viene utile per evitare di perdere i dati inseriti in un form o le modifiche effettuate in una pagina prima di salvarle.
+
+La guardia CanDeactivate viene eseguita quando l'utente tenta di navigare via dalla pagina o dal componente in cui si trova, e può restituire un booleano o un'observable booleano per indicare se la navigazione deve essere permessa o meno.
+
+Abbiamo creato un interfaccia che utilizzeremo in una classe che implementerà la logica effettiva per effettuare il deactiveGuard. Successivamente abbiamo creato un service CanDeactiveGuardService che implementasse il CanDeactive di angular e avesse come component l'interfaccia creata. Abbiamo implementate il suo unico metodo canDeactivate e tale metodo ritornnerà l'implementazione che daremo al metodo dell'interfaccia creata. Infatti nella classe server Edit, nel caso in cui l'utente lasci la pagina senza salvare le modifiche attiveremo il DeactiveGuard, che cheiderà all'utente mediante un confirm, se vorrà realmente uscire dalla pagina senza salvare le modifiche. 
+
+### Codice interfaccia + service: 
+
+import { ActivatedRouteSnapshot, CanDeactivate, RouterStateSnapshot, UrlTree } from "@angular/router";
+import { Observable } from "rxjs";
+
+export interface CanDeactivateGuard{
+    canDeactivateGuard(): boolean | Observable<boolean> | Promise<boolean>;
+}
+
+export class CanDeactivateGuardService implements CanDeactivate<CanDeactivateGuard>{
+    canDeactivate(component: CanDeactivateGuard, currentRoute: ActivatedRouteSnapshot, currentState: RouterStateSnapshot, nextState: RouterStateSnapshot): boolean | Observable<boolean> | Promise<boolean> {
+        return component.canDeactivateGuard();
+    }
+}
+
+
+### Implementazione dell'interfaccia in service-edit:
+
+export class EditServerComponent implements OnInit, CanDeactivateGuard { //come possiamo notare abbiamo implementato l'interfaccia e fatto l'override del metodo.
+
+canDeactivateGuard(): boolean | Promise<boolean> | Observable<boolean> {
+    if (!this.isAllowed) {
+      return true;
+    }
+    if (
+      !this.isUpdated &&
+      (this.serverName != this.server.name ||
+        this.serverStatus != this.server.status)
+    )
+      return confirm(
+        'Sei sicuro di voler abbandonare la pagina? Non hai salvato le modifiche'
+      );
+    else return true;
+  }
+}
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+PASSARE I DATI AD UN COMPONENT MEDIANTE IL ROUTING:
+
+Possiamo passare dei dati ad un component mediante il routing del component stesso, ad esempio abbiamo creato un component che genera un messaggio di errore, il messaggio però viene inviato direttamente dal routing (pertanto lo setteremo nel modulo di routing) così da avere per ogni singolo routing di errore, un messaggio specifico. Ad esempio per il routing alla pagina /not-found avremo un genericError (nome del component creato) con all'interno un message "page not found" o un /not-authorized che avrà come metodo "non sei autorizzato". Tutto ciò utilizzando un unico component, ovvero GenericError.
+
+Codice:
+{
+    path: 'not-found',
+    component: GenericErrorComponentComponent, data: {message: 'Page not Found!'}
+  }
+  
+In questo caso passiamo in data un oggetto js, con chiave "message" e valore "Page not found!", nel component a cui tale routing porta ovverò GenericErrorComponent avremo nell'OnInit:
+
+ ngOnInit(): void {
+    this.message = this.route.snapshot.data['message'];
+    this.route.data.subscribe((data: Params) => {
+      this.message = data['message'];
+    })
+  }
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+RESOLVER ROUTING:
+
+Il resolver in angular ci permette di eseguire del codice appena il routing va a buon fine, a differenza del canActive che verifica se possiamo o non accedere ad un determinato component mediante il routing, resolver si limita solo ad eseguire del codice prima di reinderizzare la pagina, ed è perfetto utilizzarlo con i task asincroni. Ad esempio se volessimo fare una get dei dati da un back end, potremmo sia eseguirlo nell'OnInit del component e poi mostrare questi dati a video, ma sorpatutto potremmo creare un resolver che esegue questa get prima ancora di renderizzare il component e nell'OnInit ci limiteremo solo a prelevare i dati dal resolver, piuttosto che stare ad elaborare tutta la logica per eseguire la get (in quanto è stata fatta già svolta nel resolver la logica). Pertanto  il resolver è un servizio che consente di caricare i dati necessari per una determinata route prima che la route stessa venga attivata. In altre parole, il resolver viene utilizzato per risolvere le dipendenze della route.
+
+Ad esempio, supponiamo di avere una route che mostra i dettagli di un prodotto. Prima di attivare la route, potrebbe essere necessario caricare i dettagli del prodotto dal server. Utilizzando un resolver, possiamo caricare i dati del prodotto in modo asincrono prima che la route venga attivata.
+
+Esempio del codice del resolver:
+
+interface ServerModel{
+    id: number;
+    name: string;
+    status: string;
+}
+@Injectable()
+export class ResolverServer implements Resolve<ServerModel>{
+
+    constructor(private serverService: ServersService){
+
+    }
+    resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): ServerModel | Observable<ServerModel> | Promise<ServerModel> {
+        return this.serverService.getServer(Number(route.params['id']))
+    }
+}
+
+In questo caso il resolver è un servizio che inietta al suo interno un altro servizio (serverService) ed è il resolver ad eseguire la get tramite id del server mediante il parametro che passiamo nell'url (nel routing pertanto) e ritorna un oggetto di tipo Server.
+
+Nell'component a cui conduce il routing che sta utilizzando tale resolver nell'OnINit andremo a prendere i dati dal resolver tramite l'activatedRout:
+
+ngOnInit() {
+    //get dei dati dal resolver
+    this.activeRout.data.subscribe((data: Data) => {
+      this.server = data['server'];
+      this.serverName = this.server.name;
+      this.serverStatus = this.server.status;
+    });
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ANGULAR USEHASH ROUTING: 
+
+Di default, Angular utilizza la parte del path URL dopo il carattere '#' (noto come hash) per gestire la navigazione. Questo approccio viene chiamato "hash location strategy" e consente di gestire la navigazione all'interno della stessa pagina senza dover ricaricare l'intera pagina.
+
+Tuttavia, in alcune situazioni, ad esempio quando si utilizza un server che non supporta il routing basato su hash, si potrebbe voler utilizzare il "path location strategy" di Angular, che utilizza l'intero path URL per gestire la navigazione. In questo caso, è possibile abilitare il "path location strategy" impostando la proprietà 'useHash' a false In questo modo, Angular utilizzerà l'intero path URL per gestire la navigazione invece del routing basato su hash. Tuttavia, è importante notare che il routing basato su hash ha alcune vantaggi in termini di compatibilità con i server e la cache del browser, quindi dovrebbe essere utilizzato solo se necessario.
+
+Codice da inserire nel routing module:
+// imports: [RouterModule.forRoot(RoutingPage, { useHash: true })], mette un hash prima dei vari path di routing di angular, e serve principalmente perchè in quel #  andrà il nome sel server in cui hosteremo l'app.
+
+FINE ANGULAR ROUTING
+#################################################################################################################################################
+

@@ -1,0 +1,8 @@
+
+.mainSec{
+    box-sizing: border-box;
+    width: 100vw;
+    height: 100vh;
+    box-sizing: border-box;
+    padding: 25px 15px;
+}

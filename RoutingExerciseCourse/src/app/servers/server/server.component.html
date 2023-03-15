@@ -1,0 +1,8 @@
+<h4 *ngIf="allowed == 0">YOU ARE NOT ALLOWED</h4>
+<div *ngIf="allowed == 1">
+  <h5>{{ server.name }}</h5>
+  <p>Server status is {{ server.status }}</p>
+  <button class="btn btn-primary" (click)="navigateToEdit()">
+    CLICK FOR EDIT
+  </button>
+</div>

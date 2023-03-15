@@ -1,0 +1,14 @@
+
+.flex{
+    box-sizing: border-box;
+    border: solid black 1px;
+    padding: 5px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    cursor: pointer;
+    margin-bottom: 5px;
+}
+.flex:hover{
+    background-color: rgb(213, 197, 197);
+}
