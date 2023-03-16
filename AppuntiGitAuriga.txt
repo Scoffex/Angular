@@ -1,0 +1,149 @@
+Git è un vcs ovvero un file system virtuale e permette di gestire file all'interno di una cartella chiamata repository, permettendo a coloro che la utilizzano di passare tra una versione ed un altra di un singolo file o di un intero progetto. Permette di vedere chi ha modificato il progetto, chi ha aggiunto o rimosso roba ecc. 
+
+Git è un vcs distribuito quindi vuol dire che possiamo sia lavorare in locale che da remoto, la versione di un progetto di git è definite snapshot. (vcs in locale, vuol dire che è presente solo sulla macchina fisica in locale, mentre centralizzato è unicamente presente su un server remoto).
+
+Git è un file system perchè permette di gestire cartelle e file di un progetto, virtuale perchè si basa su un file system già esistente (quello del s.o). Ogni file in git è settato con una mappa chiave valore, dove la chiave è una stringa codigicata mentre il valore è il file in se.
+
+Autenticarsi in git:
+git config --local user.name "vostro-username"
+git config --local user.email "vostra-email"
+
+### Creazione prima repository:
+git init firstrepo (comando da lanciare nella directory su cui vogliamo creare il repository)
+
+### Git status
+All'interno della repository lanciare "git status" esso ci permette di controllare lo stato attuale della cartella principale rispetto all'snapshot (ovvero rispetto all'ultima versione).
+
+Nel caso avessimo creato un file nella repository manualmente, git status ci notificherà che il file appena aggiunto è UNTRACKED poiché non è stato mai memorizzato o registrato all’interno del filesystem virtuale di Git.
+
+### GitAdd
+Git Add ci permette di memorizzare all'interno del file system virtuale il file appena aggiunto, digiteremo git add HelloWorld.txt, pertanto se rilanciassimo git status noteremmo come il file non sarà più UNTRACKED. Con Git Add aggiungiamo il file alla Stanging Area ovvero una zona del db di git dove sono segnati tutti i file che devono far parte del nuovo snapshot (della nuova versione del progetto).
+
+### GitCommit 
+Con git commit noi andiamo a creare lo snapshot effettivo di tutti i file che abbiamo aggiunto alla stanging area. 
+comando = git commit -m "messaggio della commit".
+
+La commit è composta da un codice hash che la identifica, dall'autore della commit con username ed email. Data ora e fuso orario della commit, e il messaggio della commit.
+
+###GitLog
+git log ci permette di vedere tutte le commit effettuate all'interno del progetto. (basta scrivere solo git log).
+
+git logf (comando alternativo che mostra più informazioni)
+----------------------------------------------------------------------------------------------------------------------------------------------------
+COMANDI GIT INTERNAL PER CAPIRE MEGLIO IL FUNZIONAMENTO DI GIT:
+
+###find 
+ci fa visualizzare sul terminale tutte le cartelle di git.
+
+###gitHash
+comando = git hash-object nomeDelFile.txt ci mosterà l'hash code del file selezionato, che corrisponde alla chiave del file, ovvero un header identificativo.
+
+
+master = indica a git la commit più recente di quel branch 
+HEAD = è un collegamento alla commit in cui ci troviamo in quel momento
+----------------------------------------------------------------------------------------------------------------------------------------------------
+Quando visualizziamo la storia di un branch o di un repository, le commit ci verranno dispsota partendo da quella recente fino ad arrivare a quella meno recente.
+
+###GitCheckout
+Git come già detto si basa sulle snapshot, ovvero una cattura delle commit che vengono effettuate su un repository. Ogni volta che viene effettuata una nuova commit essa viene posta sopra quella precedente e così via. Se volessimo tornare ad una commit meno recente, dovremmo usare git checkout, indicando come parametor l'hash della commit che vogliamo aprire. TALE COMANDO cancella tutte le commit precedentemente effettuate, pertanto se abbiamo creato dei file con delle commit precedenti o avesismo apportato delle mofiche, verrebbero automaticamente cancellate con git checkout. il puntatore Head torna a puntare alla commit selezionata nella checkout.
+
+
+###DETACHED HEAD
+Nel caso in cui si effettuiuna checkout, l'HEAD inizerebbe a puntare non più al master (ovvero l'ultima commit) ma alla commit su cui abbiamo effettuato il checkout, ciò vuol dire che non punta più ad un puntatore referenziale ma punta ad un commit scelta da noi e per questo entra in una fase di Detached HEAD. Quando siamo in questa fase non possiamo fare modifiche perché ci siamo allontanati dal puntatore master, e gli eventuali commit effettuati in questo stato non saranno collegati al master.
+
+git checkout hashcodeDellaCommit 
+
+###RITORNO AL MASTER
+Per ritornare al master basta fare: 
+git checkout master
+in tal caso l'HEAD tornerà a puntare al master e le modifiche effettuate d'ora in poi saranno effettive.
+
+
+###GitBranch
+git branch nuovoBranch = creeremo un nuovo branch.
+git checkout nuovoBranch = ci spostiamo sul nuovo branch.
+
+###mergare modifiche dal branch al master
+Una branch è sostanzialmente un grafo aciclico orientato, perché partendo da un puntatore referenziale (per esempio master) si può arrivare al commit che ha dato origine a quel puntatore, senza effettuare cicli. È anche paragonabile a un ramo di sviluppo, e quindi è utile per sviluppi paralleli del codice.
+Per mergare le modifiche che abbiamo effettuato in un branch con il master dobbiamo:
+1)spostarci sul master.
+2) fare git merge nome del branch che vogliamo mergare nel master
+
+Per finalizzare un merge dopo aver risolto i conflitti è necessario eseguire il comando git commit. Non è necessario specificare il messaggio di commit in quanto verrà aggiunto automaticamente un messaggio significativo, anche se è comunque possibile modificarlo.
+
+###eliminare un branch
+git merge -d nomeDelMerge
+
+Un branch si definisce non fully merged quando i suoi commit non sono stati mergati in un branch e pertanto andrebbero persi, un branch  non fully merged è eliminabile ma causerebbe una perdita di dati.
+----------------------------------------------------------------------------------------------------------------------------------------------------
+Recuperare le commit di un branch che non è stato mergiato ed è stato elminato:
+
+E' possibile recuperare dei file che non sono stati mergiati, perciò parliamo di un branch che non è fully merged, da un branch che si è eliminato. Pertanto se per sbaglio si elimina un branch e non si sono mergate le modifhe di tale branch allora è possibile recuperare le commit. Questo avviene perchè:
+
+QUANDO GIT ELIMINA UN BRANCH, NON ELIMINA LE COMMIT EFFETTUATE IN QUEL BRANCH (Le commit di un branch che non esiste più sono definite orfane, se rimangono tale verranno cancellate dopo 30 giorni da quando è stato eliminato il loro branch).
+
+Esistono 2 modi per recuperare delle commit orfane:
+
+1) git fsck --lost-found = che permette di cercare all'interno del repo gli hash dangling cioè senza alcun puntatore associato ad esso.
+
+2) git reflog = mostra tutte le posizioni che HEAD (che ricordiamo è un puntatore, che punta alle commit su cui si è attualmente, perciò diventa un registro di tutte le commit che si sono effettuate, orfane e non) ha assunto in passato. 
+
+Tale registro parte dalla posizione attuale di head, perciò dalla commit su cui siamo effettivamente e tale head in reglog verrà indicato in HEAD@{0}, a seguire avremo una serie di HEAD@{1}, HEAD@{2} e così via che indicano tutte le commit (orfane e non) a cui head ha puntato dal più recente al meno recente.
+
+Selezionata la commit che vogliamo recuperare (supponiamo HEAD@{1}, scrivere:
+git checkout HEAD@{1}
+
+ora ci ritroveremo in uno stato di DETACHED HEAD, in quanto il nostro head non punterà più al master (ciò causerà un spostamento del puntatore head nei confronti della nostra commit da recuperare)
+
+Successivamente tornare sul master con il checkout, rifare git reflog e successivamente digitare git branch nomeDelBranch HEAD@{3},e  creerà un nuovo branch con quella commit all'interno.
+
+Ritornare indietro da un merge:
+Metti caso abbiamo per sbaglio fatto il merge di un branch, e quel branch entra in conflitto con il nostro codice. Noi possiamo resettare il repository alla situazione precedente a quel merge, tutto ciò con il comando git reset --hard HEAD~1. che resetta il repository alla commit subito precedente.
+----------------------------------------------------------------------------------------------------------------------------------------------------
+CREARE UN REPO CON GIT INIT --BARE
+L'opzione --bare permette di mostrare i file che definiscono il repository remoto direttamente all'interno della cartella del repository e non all'interno di una working directory, come .git. È l'ideale per creare un repository remoto. (NOTA E' OBBLIGATORIO AVERE BARE PER CREARE UN REPO REMOTO)
+
+path =  C:/Users/alaera/Documents/GitEsercitazioneAuriga/RepoRemote/
+SETTARE IL REPOSITORY CREATO COME REPOSITORY REMOTO DEL NOSTRO REPOSITORY LOCALE (QUELLO SU CUI ABBIAMO LAVORATO FINO AD ORA):
+git remote add origin "percorsoDelRepository"
+
+PUSHARE LE COMMIT SUL REPOSITORY REMOTO:
+Prima di effettuare ciò bisogna legare la branch di upstream del repository remoto con quello locale, e si effettua con il comando:
+git push --set-upstream origin master
+
+CLONARE UN REPOSITORY REMOTO:
+Per clonare un repository remoto basta fare:
+git clone {Path del percoso in cui è locato il repository remoto} {Nome della cartella in cui vogliamo salvare i file clonati dal repo}
+
+
+STAMPARE LISTA REPOSITORY REMOTI:
+git remote -v
+git remote remove nomeRepoRemoto = elimina un repository remoto dalla lista dei repo.
+
+IMPORTANTE IL REPOSITORY REMOTO NON GESTICE CONFLITTI DI SINCRONIZZAZIONE. MA VANNO GESTITI IN LOCALE QUANDO SI CLONA IL REPOSITORY. SE SI EFFETTUA UNA COMMIT SU UN REPOSITORY REMOTO CHE NON E' STATO SINCRONIZZATO CAUSERA' ERRORE. PRIMA DI OGNI COMMIT EFFETTUARE:
+
+### EFFETTUARE GIT FETCH
+git fetch nomeRepositoryRemoto (tipo origin) = perciò fetch ci permette di sincroniccare il nostro repository locale con quello remoto importandosi tutte le commit che mancano rispetto all'ultima sincronizzazione.
+per integrare le modifiche scaricate fare un merge = git merge nomeRepositoryRemoto/master
+git log nomeRepositoryRemoto/master = fa visualizzare le modifiche scaricate.
+----------------------------------------------------------------------------------------------------------------------------------------------------
+IN GIT ESISTONO 4 OPERAZIONI DI REBASE (Le operazioni di rebase sono molto importanti per poter riorganizzare la storia del grafo del progetto in modo da renderlo più leggibile.): 
+REBASE= git rebase origin/master.
+In pratica, questo comando prende il puntatore master con tutti i commit avvenuti dopo la ramificazione e cerca di "incollare tutto" sopra la branch desiderata, cercando di ricreare una situazione lineare.
+
+AMEND= Il comando "git amend" è uno strumento di Git che consente di apportare modifiche al commit più recente in un ramo di lavoro. In pratica, il comando sostituisce il commit più recente con un nuovo commit contenente le modifiche apportate.
+Ciò può essere utile per correggere errori nei messaggi di commit, aggiungere file che sono stati dimenticati in un commit precedente, o modificare il contenuto del commit stesso.
+
+CHERRY PICK = Cherry-pick è un'operazione Git che consente di applicare specifici commit da una branch a un'altra branch. In pratica, permette di selezionare uno o più commit da una branch e applicarli a un'altra branch senza dover copiare l'intera storia di commit.
+
+Il cherry-pick è utile quando si desidera incorporare solo alcune modifiche specifiche, ad esempio una correzione di bug o una nuova funzionalità, da una branch di lavoro a un'altra, senza dover copiare tutte le modifiche che potrebbero esserci tra i commit. Ciò è particolarmente utile quando si lavora su più rami di sviluppo in parallelo e si vuole portare solo alcune modifiche da una branch all'altra.
+
+È importante notare che il cherry-pick deve essere utilizzato con cautela, in quanto può portare a conflitti di merge e problemi di integrità del codice se non viene eseguito correttamente. Inoltre, poiché il cherry-pick elimina il contesto dei commit originali, potrebbe essere necessario risolvere manualmente eventuali problemi di dipendenza o conflitti di codice che si verificano quando il commit viene applicato a una nuova branch.
+
+SQUASH = In Git, lo squash è un'operazione che consente di combinare due o più commit in un unico commit più significativo. Questo può essere utile quando si lavora su un ramo di sviluppo e si desidera riorganizzare la storia dei commit, magari per eliminare commit superflui, migliorare la leggibilità della cronologia dei commit o semplificare la gestione del codice.
+
+L'operazione di squash può essere eseguita tramite il comando "git rebase -i" (interattivo) e scegliendo l'opzione "squash" per i commit che si desidera combinare. Ciò aprirà un editor di testo in cui è possibile modificare la descrizione del commit combinato. Una volta salvate le modifiche, verrà creato un nuovo commit con la descrizione modificata e il codice dei commit combinati.
+
+codice squash = git rebase -i hashcommit (utilizzare quella meno recente, perchè poi automaticamente verranno accorpate tutte quelle successive a quella selezionata, formando appunto un unica commit).
+----------------------------------------------------------------------------------------------------------------------------------------------------
+Una repository forkata deve essere sempre pubblica.
