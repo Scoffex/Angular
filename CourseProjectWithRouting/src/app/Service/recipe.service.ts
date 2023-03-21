@@ -1,0 +1,56 @@
+import { Injectable } from "@angular/core";
+import { Subject } from "rxjs";
+import { Recipe } from "../recipes/recipe.model";
+import { Ingredients } from "../shareFolder/ingredients.model";
+
+@Injectable()
+export class RecipeService{
+
+recipeSubjectArr = new Subject<Recipe[]>();
+recipeSubject = new Subject<Recipe>();
+
+    recipes: Recipe[] = [
+        new Recipe(
+          'Banan Split',
+          'semplice e gustose banane fatte a crema',
+          'https://www.my-personaltrainer.it/2020/04/08/proprieta-banane-orig.jpeg',[new Ingredients('Banana', 10), new Ingredients('Panna', 20)]
+        ),
+        new Recipe(
+          'Lasagna',
+          'gustosa lasagna con sugo',
+          'https://www.antoniettapolcaro.it/wp-content/uploads/2022/02/Lasagna-alla-napoletana_2022-scaled.jpg',
+          [new Ingredients('Pasta', 10), new Ingredients('Sugo', 20)]
+        ),
+      ];
+
+    addRecipe(newRecipe: Recipe){
+        this.recipes.push(newRecipe);
+    }
+
+    deleteRecipe(removeRecipe: Recipe){
+        this.recipes.splice(this.recipes.indexOf(removeRecipe), 1);
+    }
+
+    emitRecipeArr(){
+      this.recipeSubjectArr.next(this.recipes);
+    }
+
+    emitRecipe(recipe: Recipe){
+      this.recipeSubject.next(recipe);
+    }
+
+    editRecipe(id: number, updatedRecipe: Recipe){
+        this.recipes[id] = updatedRecipe;
+    }
+
+    getRecipe(id: number){
+      return this.recipes[id];
+    }
+
+    getIndexOfRecipe(recipe: Recipe){
+      return this.recipes.indexOf(recipe);
+    }
+   
+
+
+}
