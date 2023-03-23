@@ -1,0 +1,52 @@
+<div class="container">
+  <div class="row">
+    <div class="col-xs-12 col-sm-10 col-md-8 col-sm-offset-1 col-md-offset-2">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <div formGroupName="userData">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" class="form-control" formControlName="username" />
+          </div>
+
+          <span class="help-block" *ngIf="
+              !form.get('userData.username').valid &&
+              form.get('userData.username').touched
+            ">
+            <div *ngFor="let err of printError(form.get('userData.username'), 0)">
+              <span>{{ err }}</span>
+            </div>
+          </span>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="text" id="email" class="form-control" formControlName="email" />
+          </div>
+
+          <span class="help-block" *ngIf="
+              !form.get('userData.email').valid &&
+              form.get('userData.email').touched
+            ">Inserisci un email valida!</span>
+        </div>
+        <div formArrayName="hobbies">
+          <h4>Your Hobbies:</h4>
+          <button class="btn btn-default" type="button" (click)="addHobbie()">
+            Add Hobby
+          </button>
+          <div *ngFor="let formControl of getHobbies(); let i = index">
+            <input type="text" class="form-control" [formControlName]="i" />
+            <p *ngIf="!form.get('hobbies').valid && searchIndex(i)">
+              Inserisci un valore
+            </p>
+          </div>
+        </div>
+        <div class="radio" *ngFor="let gender of genders">
+          <label>
+            <input type="radio" [value]="gender" formControlName="gender" />{{
+            gender
+            }}
+          </label>
+        </div>
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+    </div>
+  </div>
+</div>
