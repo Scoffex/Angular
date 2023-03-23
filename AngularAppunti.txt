@@ -32,6 +32,13 @@ export class AppModule { }
 creare un nuovo component =  ng g c {nomeComponent} --skip-tests
 
 
+
+
+
+
+
+
+
 NOTE ANGULAR:
 
 
@@ -133,7 +140,12 @@ nel file ts della component app-shopping-edit scriveremo ciò per avere il valor
 #################################################################################################################################################
 
 
-##############################################################################################################################################
+
+
+
+
+
+
 
 ##############################################################################################################################################
 HOOK 
@@ -168,6 +180,12 @@ Esempio: Immagina di avere un componente "timer" che deve interrompere il timer 
 
 Questi sono solo alcuni esempi di hook di Angular. Ogni hook ha uno scopo specifico e può essere utilizzato in modo creativo per personalizzare il comportamento del componente/direttiva.
 ##############################################################################################################################################
+
+
+
+
+
+
 
 #################################################################################################################################################
 Directive 
@@ -263,6 +281,13 @@ In questo caso stiamo ascoltando il click dell'elemento html, quando verrà clic
 ------------------------------------------------------------------------------------------------------------------------
 #################################################################################################################################################
 
+
+
+
+
+
+
+
 #################################################################################################################################################
 SERVICE AND DIPENDENCY INJECTION
 
@@ -339,6 +364,12 @@ Codice:
 		console.log(this.recipeToPass);
 	}
 #################################################################################################################################################
+
+
+
+
+
+
 
 #################################################################################################################################################
 ROUTING
@@ -513,7 +544,7 @@ export class UserComponent implements OnInit {
 
 Un costruttore con all'intenro un ActivatedRoute che tramite lo snapshot ci permette di salvare i parametri di due variabili che compongono un oggetto.
 
-
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 NOZIONE IMPORTANTE E CORRETTA APPLICAITONE DEL FATCH DEL PROGRAMATIC ROUTER:
 	
 	Tale porzione di codice va bene unicamente per il primo prelievo dei dati tramite il routing, perciò alla prima richeista che l'utente fa a tale'indirizzo con tali dati ma se noi provassimo ad aggiornare tali dati mediante una nuova linkedRoute verrebbero unicamente aggionrati nell'url ma this.user continuerà a contenere i dati iniziali.
@@ -522,17 +553,19 @@ NOZIONE IMPORTANTE E CORRETTA APPLICAITONE DEL FATCH DEL PROGRAMATIC ROUTER:
       id: this.route.snapshot.params['id'],
 	   name: this.route.snapshot.params['name'];
     } 
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 	In questo caso invece fetchiamo i dati mediante un observable asincrono, che rimane in ascolto e appana vede che viene effettuata una nuova linkedRoute con dei nuovi parametri li prende e li setta alle variabili dell'ggetto user.
-			 this.route.params.subscribe((params: Params) => {
-				this.user.id = params['id'];
-				this.user.name = params['name'];
+	
+	
+	this.route.params.subscribe((params: Params) => {
+		this.user.id = params['id'];
+		this.user.name = params['name'];
 			})
 	
   
   
   
-  PER FUNZIONARE CORRETTAMENTE SERVONO ENTRAMBI I METODI, IL PRIMO VIENE ESEGUITO LA PRIMA VOLTA CHE SI EFFETTUA LA RICHIESTA, IL SECONDO INVECE PER AGGIORNARE I DATI IN MANIERA DINAMICA DURANTE L'ESECUZIONE DEL CODICE.
+  PER FUNZIONARE CORRETTAMENTE SERVONO ENTRAMBI I METODI, IL PRIMO VIENE ESEGUITO LA PRIMA VOLTA CHE SI EFFETTUA LA RICHIESTA, IL SECONDO INVECE PER AGGIORNARE I DATI IN MANIERA DINAMICA DURANTE L'ESECUZIONE DEL CODICE. (AFFERMAZIONE DA RIVEDERE)
   
   ngOnInit(){
   this.user = {
@@ -547,8 +580,13 @@ NOZIONE IMPORTANTE E CORRETTA APPLICAITONE DEL FATCH DEL PROGRAMATIC ROUTER:
   }
   
   
-  
-    NOTA IMPROTANTE: Angular se la vede da solo ad effettuare la destroy del params quando ha terminato la subscribe, ovvero la subscribe rimane sempre in memoria in Angular ma ciò che genera viene distrutto e ricreato ogni qual volta ne necessitiamo. In questo caso params non rimane in memoria ma viene distrutto e ricreato quando viene effettuato l'OnInit. Ma in questo caso Angular lo fa automaticamente se volessimo farlo manualmente dovremmo improtare l'hook OnDestroy e creare un oggetto parameter: Subscription; e successivamente nel OnDestroy effettuare l'unsubscibe. CODICE DA AGGIUNGERE AL CODICE PRECEDENTE.
+  ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+    NOTA IMPROTANTE: Angular se la vede da solo ad effettuare la destroy del params quando ha terminato la subscribe. La subscribe rimane sempre in memoria in Angular ma ciò che genera viene distrutto e ricreato ogni qual volta ne necessitiamo. In questo caso params non rimane in memoria ma viene distrutto e ricreato quando viene effettuato l'OnInit. Angular fa automaticamente l'unsubscribe ogni qual volta il component muore ma se volessimo farlo manualmente dovremmo improtare l'hook OnDestroy e creare un oggetto parameter: Subscription; e successivamente nel OnDestroy effettuare l'unsubscibe. CODICE DI TALE SPIEGAZIONE PRESENTE PIU' SOTTO, NELLA SEZIONE OBSERVABLE - SUBJECT.
+	
+	SPIEGAZIONE PIU' APPROFONDITA:
+	
+	Quando si utilizza un Observable in Angular, è possibile sottoscriversi ad esso utilizzando il metodo Subscribe. Questo metodo accetta una o più funzioni come argomenti, che verranno chiamate quando il flusso di dati emette un valore o incontra un errore. La funzione chiamata per gestire i dati emessi dal flusso è la funzione onNext, mentre la funzione chiamata per gestire gli errori è la funzione onError.
+	Per quanto riguarda la gestione dei parametri nella route, Angular gestisce automaticamente la cancellazione dei parametri tramite la classe ParamsSubscription. Questa classe è responsabile della gestione della sottoscrizione ai parametri della route, e viene attivata quando si naviga verso una nuova route. Quando si naviga via dalla route che contiene i parametri, Angular distrugge automaticamente la sottoscrizione ai parametri tramite il metodo unsubscribe della classe ParamsSubscription, evitando così possibili perdite di memoria o comportamenti imprevisti.
     
 	parameter: Subscription;
   
@@ -863,3 +901,394 @@ Codice da inserire nel routing module:
 FINE ANGULAR ROUTING
 #################################################################################################################################################
 
+
+
+
+
+
+
+TASK ASINCRONI VS TASK SINCRONI:
+
+La programmazione sincrona e asincrona sono due modelli di esecuzione del codice che si differenziano per il modo in cui gestiscono le operazioni che richiedono tempo per essere eseguite. 
+
+In un modello di programmazione sincrona, il programma esegue le operazioni in modo sequenziale, una dopo l'altra, aspettando che ogni operazione sia completata prima di passare alla successiva.
+
+In un modello di programmazione asincrona, il programma esegue le operazioni in modo non sequenziale, senza aspettare che ogni operazione sia completata prima di passare alla successiva. Un esempio di programmazione asincrona in Typescript potrebbe essere l'utilizzo di una chiamata API, una normalissima get deve essere eseguita per forza in maniera asincrona perchè potrebbe richiedere del tempo per essere eseguita. 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Come scrivere task asyncroni in js: 
+
+l'async/await è una forma di sintassi che permette di scrivere codice asincrono in modo simile a quello sincrono, cioè in modo lineare. Questo è possibile grazie al fatto che l'async/await si basa sul concetto di Promise, ovvero oggetti che rappresentano un'operazione asincrona che potrebbe o meno essere completata in futuro.
+
+L'async/await funziona in questo modo: si utilizza la parola chiave "async" per definire una funzione asincrona, ovvero una funzione che ritorna una Promise. All'interno della funzione, si utilizza la parola chiave "await" per indicare il punto in cui si attende il completamento di un'operazione asincrona. In pratica, quando si usa "await" all'interno di una funzione asincrona, il programma si sospende fino a quando l'operazione asincrona non è completata.
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Dubbio chiarito da chat gpt:
+
+DOMANDA: "Mi spieghi una cosa, se sappiamo che un task asincrono deve essere eseguito senza che il programma stia aspettando il suo completamento, pertanto nel frattempo esegua altro, allora perchè per le chiamate alle api usiamo l'await per indicare al programma di attendere?"
+
+RISPSOTA: "Buona domanda! In generale, quando si parla di programmazione asincrona, l'idea principale è di poter eseguire del codice in modo non bloccante, ovvero di non dover attendere il completamento di un'operazione prima di procedere con le altre. In questo modo, si può utilizzare il tempo di attesa per eseguire altre attività, migliorando l'efficienza del programma.
+
+Tuttavia, alcune operazioni asincrone richiedono che il programma attenda il loro completamento prima di poter procedere, come nel caso delle chiamate alle API. Questo perché le chiamate alle API spesso richiedono una certa quantità di tempo per essere completate, e il programma ha bisogno dei dati restituiti dalla chiamata API per poter procedere.
+
+Quando usiamo l'operatore await, stiamo essenzialmente dicendo al programma di attendere il completamento dell'operazione asincrona prima di procedere con il codice successivo. Tuttavia, la differenza fondamentale è che, invece di bloccare l'intero thread, l'operatore await consente al thread di essere restituito al sistema operativo in modo che possa gestire altri eventi, migliorando l'efficienza complessiva del programma.
+
+In sostanza, l'uso di await per le chiamate alle API consente di utilizzare l'approccio asincrono in modo efficace, consentendo al programma di eseguire altre attività mentre attende il completamento dell'operazione asincrona.
+
+Questo modello di esecuzione non bloccante consente al programma di continuare ad eseguire altre operazioni mentre attende l'esito dell'operazione asincrona. Ad esempio, per una richiesta di dati da un server nel frattempo il thread principale può essere utilizzato per eseguire altre operazioni come aggiornare l'interfaccia utente o elaborare altri dati locali.
+
+In questo modo, il programma può continuare ad eseguire altre operazioni senza dover attendere l'esito dell'operazione asincrona. Quando i dati richiesti sono disponibili, il thread viene prelevato dalla coda degli eventi e il programma può utilizzarli per completare l'operazione."
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+OBSERVABLE:
+L'observable è un oggetto che rappresenta un flusso di dati asincrono che può essere appunto "osservato" nel tempo, cioè rimane in ascolto di tale dati e appena vengono emessi si attiva. (tramite il subscribe all'observable tramite dati possono essere presi ed utilizzati). 
+
+Il subscribe invce è la funzione utilizzata per ascoltare gli eventi di un observable, pertanto per accedere a dei dati che ritorna un observable bisogna iscriversi (appunto effettuare la subscribe) ad esso. Il metodo subscribe registra automaticamente all'observable un observer, ovvero l'elemento appartenente sempre alla libreria rxjs che appunto si occupa di rimanere in ascolto di un observable. Pertanto subscribe non è altro che un metodo di un observer.
+
+Un observable può emettere zero o più valori seguiti da un completamento o un errore. Gli observable sono utilizzati spesso in Angular per gestire eventi asincroni come le richieste HTTP, i risultati di una ricerca, i cambiamenti di stato di un componente, e altro ancora. Da un observable noi possiamo fare l'handling (ovvero possiamo prendere) dei i dati che ritorna o degli errori che ritorna o prendere direttamente l'intero observable, pertanto possiamo anche implementare della logica per gestire l'observable nel caso ritorni dati o nel caso ritorni un errore.
+
+Per creare un observable abbiamo bisogno della libreria rxjs, una libreria esterna ad Angular.
+
+CREAZIONE DI UN CUSTOM OBSERVABLE: 
+
+const customObservable = Observable.create(observer => {
+    setInterval(() => {
+      observer.next(this.count);
+      this.count++;
+    }, 1000);
+   })
+   
+   abbiamo salvato in una costante un metodo che si occupa di creare un observable personalizzato che emette un valore ogni secondo e lo incrementa successivamente. Il parametro "observer" nella funzione di creazione rappresenta l'osservatore che riceve i valori emessi dall'Observable. L'osservatore può sottoscriversi all'Observable personalizzato e ricevere i valori emessi chiamando il metodo "subscribe".
+   
+   this.firstOfSubscription = customObservable.subscribe(data => {
+    console.log(data);
+   })
+   
+L'observer può emettere sia i valori di un observable che gli errori, nel metodo scritto precedentemente possiamo sia effettuare l'handling del metodo next() che emetterà i dati, e sia l'handling degli errori in questo modo:
+
+const customObservable = Observable.create(observer => {
+    setInterval(() => {
+      if(this.count > 3){
+        observer.error(new Error('console is greater than 3'));
+        
+      }
+      observer.next(this.count);
+      this.count++;
+    }, 1000);
+   })
+
+cioè gli stiamo dicendo che se il conuter è amggiore di tre l'observer emetterà un errore con messaggio personalizzato.
+
+Il subscribe dell'observer quando verrà generato un errore lo loggherà:
+
+this.firstOfSubscription = customObservable.subscribe(data => {
+    console.log(data);
+   }, error => {
+    alert(error);
+   })
+   
+E' possibile anche emettere una funzione detta complete() che notificherè il listner dell'onbservable che il nostro observable è completo:
+
+const customObservable = Observable.create((observer) => {
+      setInterval(() => {
+        if (this.count === 2) {
+          observer.complete();
+        }
+        if (this.count > 3) {
+          observer.error(new Error('console is greater than 3'));
+        }
+        observer.next(this.count);
+        this.count++;
+      }, 1000);
+    });
+	
+in questo caso quando il count è uguale a 2, l'observer emettera ai suoi listner che è stato completato, i listner a loro volta potranno gestire la logica da attuare nel caso in cui l'observer sia completo in tale maniera:
+
+ this.firstOfSubscription = customObservable.subscribe(
+      (data) => {
+        console.log(data);
+      },
+      (error) => {
+        alert(error);
+      },
+      () => {
+        console.log('is Complited');
+      }
+    );
+	
+con () => {} indichiamo la logica da attuare nel caso in cui un observable sia coompleto, e in questo caso logghiamo 'is Complited'
+
+IMPORTANTE = nel caso di error di un observable esso verrà cancellato, pertanto sarà distrutto dal container di Angular. Mentre nel caso sia completo non verrà distrutto ma semplicemente targhettizzato come completed, perciò Completed ed Error hanno due riscontri diversi.
+
+OPERATORS:
+Un altro importante argomento degli observable sono gli operators. Gli operators sono dei filtri o della logica che possiamo applicare all'observable, quando un observable emette i suoi dati e prima che tali dati arrivano al subscriber, in questa specifica fase di mezzo si pongono gli operator, che si occupano di evitare di fornire al subscribe dei dati crudi. 
+Creazione di un operator: 
+
+this.customObservable.pipe(map((data: Number) => {
+      return 'Record: ' + data;
+   }))
+   
+si richiama sul nostro observabe, dopo averlo definito e creato, il metodo pipe che a sua volta chiama il metodo map dentro il quale andremo ad applicare le nostre logiche sui dati, in modo tale che non vengano ritoranti in maniera "cruda" ma siano filtrati.
+
+Il nostro listner dell'observable non dovrà più effettuare la subscribe all'observable crudo ma direttamente alla pipe che applica il filtro, in altre parole il subscribe verrà fatto successivamente alla pipe, così:
+
+this.firstOfSubscription = this.customObservable.pipe(map((data: Number) => {
+      return 'Record: ' + data;
+   })).subscribe(
+      (data) => {
+        console.log(data);
+      },
+      (error) => {
+        alert(error);
+      },
+      () => {
+        console.log('is Complited');
+      }
+    );
+	
+Come possiamo notare il subscribe viene effettuato direttamente sull'operator creato.
+Gli operator rappresentano quelli che in java chiamiamo gli stream sui dati, pertanto oltre al classico metodo map possiamo richiamare anche la funzione filter che ritorna soltanto i dati che rispettano una condizione e applicare il map sui quei dati filtrati... Ovviamente esistono innumerevoli metodi in rxjs che è possibile richiamare. Esempio con filter:
+
+ this.firstOfSubscription = this.customObservable
+      .pipe(
+        filter((data: Number) => {
+          return data > 0;
+        }),
+        map((data: Number) => {
+          return 'Record: ' + data;
+        })
+      )
+      .subscribe(
+        (data) => {
+          console.log(data);
+        },
+        (error) => {
+          alert(error);
+        },
+        () => {
+          console.log('is Complited');
+        }
+      );
+	  
+SUBJECT IN OBSERVABLE: 
+I "subject" sono una classe speciale di "observable" che permettono di emettere e ricevere eventi in modo più flessibile e dinamico.
+
+Un "Subject" può essere visto come una sorta di "proxy" tra un osservatore (observer) e un observable, che permette all'osservatore di inviare messaggi (notifiche) all'observable. In altre parole, un "Subject" può fungere sia da "observable" che da "observer" contemporaneamente.
+
+Nel corso abbiamo implementato i subject per sostituirli agli eventEmitter, ovvero d'ora in poi non emetteremo i dati tramite l'event emitter ma è più consigliabile farlo tramite il subject. il metodo emit del Event Emitter si sostituisce al next del subscribe, e per l'observer non cambia nulla in quanto effettua la subscribe all'subject. Codice:
+
+export class AppComponent implements OnInit, OnDestroy {
+  value: boolean = false;
+  constructor(private userService: UserService) {}
+
+  ngOnInit() {
+    this.userService.booleanEmitter.subscribe((data: boolean) => {
+      this.value = data;
+    })
+  }
+  ngOnDestroy(): void {
+    this.userService.booleanEmitter.unsubscribe(); //Importante notare che abbiamo fatto nell'onDestroy l'unsubscribe manualmente.
+  }
+}
+
+
+Il service che emette i dati:
+
+@Injectable()
+export class UserService{
+
+    booleanEmitter = new Subject<boolean>();
+
+    emitBoolean(value: boolean){
+        this.booleanEmitter.next(value);  //metodo next invece che emit.
+    }
+}
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+DIFFERENZE EVENT EMITTER VS SUBJECT: 
+
+L'EventEmitter e il Subject sono entrambi utilizzati per la comunicazione tra componenti in Angular, ma differiscono in alcuni aspetti.
+
+L'EventEmitter è una classe che estende il Subject e viene utilizzata per emettere eventi da un componente figlio ad un componente padre attraverso l'output binding. L'EventEmitter può essere emesso solo in modo asincrono utilizzando il metodo emit(). Inoltre, l'EventEmitter può emettere un solo valore alla volta, quindi se si desidera inviare più di un valore, questi devono essere incapsulati in un oggetto o in un array.
+
+Il Subject, d'altra parte, è una classe che implementa sia l'Observable che il Observer. Può essere utilizzato per creare un observable e inviare valori multipli attraverso il metodo next(). Inoltre, il Subject può emettere sia valori sincroni che asincroni, a seconda del metodo next() utilizzato.
+
+In sintesi, l'EventEmitter è una sottoclasse del Subject ed è utilizzato principalmente per l'emissione di eventi asincroni da un componente figlio ad un componente padre, mentre il Subject può essere utilizzato per creare un observable che emette valori multipli in modo sincrono o asincrono.
+
+L'event emitter essendo gestito da angular viene chiuso automaticamente, mentre il subject va fatto manualmente.
+
+IMPORTANTE: Dobbiamo usare EventEmitter quando abbiamo @Output perciò quando effettuiamo il two way binding, mentre per la comunicazione fra le componenti mediante service possiamo usare il subject, ma per @Output sempre e solo EventEmitter, perchè in tal caso lo gestisct autonomamente angualr.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ANGULAR FORM:
+In Angular i forms sono rappresentati da degli oggetti JSON formati a loro volta da un oggetto valore che contiene i valori del form, e una proprietà valid, che verifica se l'oggetto JSON è valido o no.
+In Angular per quanto riguarda i Forms abbiamo due approcci: 
+
+Templete Driven: Angular infers the form Object from the DOM. Cioè ti genera automaticamente la struttura del JSON del form direttamente dall' html. 
+Reactive: Il form viene creato in maniera programamtica e viene sincornizzato con il DOM, connettiamo il form manualmente con la logica in ts, più complesso della prima opzione ma ti da maggiore controllo. 
+
+
+Come creare il from con il templete driven: 
+
+Creare un form in html e successivamente mettere in ogni input o select ecc, ngModel (che permette ad Angular di mappare quell'input e di memorizzarlo) e attribuire un name.
+
+Successivamente nella sezione form, taggarlo con:
+
+   <form (ngSubmit)="subitForm(form)" #form="ngForm">
+   
+subitForm è un metodo che viene invocato quando viene cliccato il tasto submit, tale metodo (che abbiamo creato noi) prende la referance del form che abbiamo chiamato #form (che è una variabile di riferimento del form) ed a cui abbiamo associato il valore ngForm (ngForm è una direttiva angular che permette di far capire ad Angular che questo è un form Angular e ciò ci permette di creare alcune funzionalità come validazione campi ecc...) ed accede al form Angular creato.
+
+CODICE FORM:
+
+ <form (ngSubmit)="subitForm()" #form="ngForm">
+        <div id="user-data">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" class="form-control" ngModel name="username" required #username="ngModel">
+            <span class="help-block" *ngIf="!username.valid && username.touched">Please enter a valid username!</span>
+          </div>
+          <button class="btn btn-default" type="button">Suggest an Username</button>
+		  
+		 SPIEGAZIONE:
+		  
+		Abbiamo creato un form con un input type text, lo abbiamo mappato con ngModel e detto ad Angular che tale campo non deve essere vuoto, abbiamo assegnato all'ngModel una variabile di riferimento. Successivamente abbiamo creaot uno span che si attiva solo se l'input è stato "toccato" e se non è valido, utilizzando come mezzo per accedere alle proprietà la variabile di riferimento username. Abbiamo applicato questa classe css agli input di tipo text:
+		
+		input.ng-invalid.ng-touched{
+			border: 1px solid red;
+		}
+		
+----------------------------------------------------------------------------------------------------------------------------------------------------------------		  	
+          <div class="form-group">
+            <label for="email">Mail</label>
+            <input type="email" id="email" class="form-control" ngModel name="email" required email #email="ngModel">
+            <span class="help-block" *ngIf="!email.valid && email.touched">Please enter a valid email!</span>
+          </div>
+        </div>
+		
+		Qui medesimo flow della spiegazione superiore.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+		
+        <div class="form-group">
+          <label for="secret">Secret Questions</label>
+          <select id="secret" class="form-control" ngModel name="secret" [ngModel]="defaultValue">
+            <option value="pet">Your first Pet?</option>
+            <option value="teacher">Your first teacher?</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" type="submit" [disabled]="!validForm">Submit</button>
+      </form>
+	  
+	   SPIEGAZIONE:
+	   In questo caso invece abbiamo mappato ngModel con una variabile in typescript e non con una variabile di riferimento e abbiamo settato il suo valore di default: 
+	   
+	   defaultValue = 'pet';
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+TWO WAY BINDING WITH FORM:
+
+  <div class="form-group">
+    <label for="secret">Description:</label>
+    <textarea name="question" rows="3" cols ="101" [(ngModel)]="question"></textarea>
+  </div>
+  <p>Reply: {{ question }}</p>
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+RAGGRUPPARE GLI INPUT IN UN GRUPPO DI NGMODEL:
+inserire tutti gli input in un div, e mappare tale div con NgModelGroup:
+ <div id="user-data" ngModelGroup="userData" #userData="ngModelGroup">
+	qui tutti gli input da inserire
+ </div>
+  <p *ngIf="!userData.valid && userData.touched">User data invalid!</p>
+
+
+FORM CON TEMPLATE DI ANGULAR POCO CHIARO!
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+REACTIVE FORM:
+La seconda tipologia di form che abbiamo citato è il reactive form, in questo caso il form viene creato in html ma gestito in typescript e bisogna sincronizzare manualmente il template (l'html) con il codice in ts. 
+
+I Reactive Forms in Angular sono un modo per gestire i form HTML in modo reattivo, ossia quando un valore cambia nel form, il modello viene aggiornato immediatamente e viceversa.
+
+FormGroup è un oggetto che rappresenta un gruppo di FormControl. Per esempio, se si ha un form con nome, cognome e indirizzo, questi campi possono essere raccolti in un unico FormGroup, in modo da poter gestire tutti insieme. Un FormGroup può essere costituito da uno o più FormControl.
+form: FormGroup
+
+FormControl è un oggetto che rappresenta un campo di input HTML. Per esempio, un campo di input per il nome può essere rappresentato da un FormControl. Ogni FormControl contiene un valore iniziale e una lista di validatori che controllano la validità del valore inserito dall'utente.
+
+PROCEDURA PER CREARE UN FORM REACTIVE:
+Prima di tutto ci siamo creati una variabile in cui memorizzare il form, di tipo FormGroup poi nell'OnInit abbiamo inizializzato form con un new FormGroup:
+FormGroup è composto da diversi Form Control che accettano 3 valori: il primo è il valore di default che applicheremo all'input, il secondo valore è il suo validatore, il terzo invece un validatore asincrono.
+ngOnInit(): void {
+    this.form = new FormGroup({
+      'username': new FormControl(null),   
+      'email': new FormControl(null),
+      'gender': new FormControl('male')
+    })
+  }
+  
+ Ora una volta creato il FormGroup dobbiamo sincronizzarlo e mapparlo con il template in HTML:
+ in form specifichiamo il formGroup che bisogna applicare a quel form:
+ 
+ <form [formGroup]="form">
+ 
+ Ed in ogni singolo input andiamo ad inserire una proprietà chiamata FormControlName a cui diamo la chiave del FormControl che vogliamo applicare:
+ 
+  <form [formGroup]="form">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input
+            type="text"
+            id="username"
+            class="form-control"
+            formControlName="username">
+        </div>
+		
+		
+E' possibile creare all'interno di formGroup un sotto formGroup con all'interno dei formControl:
+
+this.form = new FormGroup({
+      userData: new FormGroup({
+        username: new FormControl(null, [Validators.required, this.validation.validName.bind(this), this.validation.validName2.bind(this),]),
+        email: new FormControl(null, [Validators.required, Validators.email]),
+      }),
+      hobbies: new FormArray([]),
+      gender: new FormControl('male', Validators.required),
+    });
+	
+In questo caso il form ha un sotto formGroup con all'inerno username ed email solo. 
+
+
+
+VALIDAZIONI CUSTOM:
+ validName2(control: FormControl): { [s: string]: boolean } {
+        if (!new RegExp("^[a-zA-Z]+$").test(control.value) && (control.value !== "" && control.value !== null))
+          return { nameContainsA: true };
+        else return null;
+      }
+	  
+	  
+	  
+METODO VALUES CHANGES E STATUS CHANGES:
+
+Entrambi observable valueChanges ci permette di vedere i valori ogni qual volta vengono modificati.
+   this.form.valueChanges.subscribe((v) => console.log(v));
+   
+  
+statusChanges ci permette di vedere lo stato dell'input ogni qual volta viene modificato o creato.
+    this.form.statusChanges.subscribe((v) => console.log(v));
+
+E' POSSIBILE EFFETTUARE ANCHE IL SET VALUE E IL PATCH VALUE ANCHE SU REACTIVE METHOD:
+/* this.form.setValue({
+      userData: {
+        username: suggestedName,
+        email: ''
+      },
+      secret: 'pet',
+      question: '',
+      gender: 'Male'
+    }) */
+	
+    this.form.form.patchValue({
+      userData: {
+        username: suggestedName
+      }
+    })
