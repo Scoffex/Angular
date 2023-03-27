@@ -1,0 +1,53 @@
+<div class="container">
+  <div class="row">
+    <div class="col-xs-12 col-md-6 col-md-offset-3">
+      <form  (ngSubmit)="onCreatePost()" [formGroup]="formPost">
+        <div class="form-group">
+          <label for="title">Title</label>
+          <input type="text" class="form-control" id="title" name="title" formControlName="title"/>
+        </div>
+        <div class="form-group">
+          <label for="content">Content</label>
+          <textarea class="form-control" id="content" name="content" formControlName="content"></textarea>
+        </div>
+        <button class="btn btn-primary" type="submit" [disabled]="!isValid">
+          Send Post
+        </button> | 
+        <button class="btn btn-danger"  (click)="onClearForm()">
+          Clear Form
+        </button>
+      </form>
+    </div>
+  </div>
+  <hr />
+  <div class="row">
+    <div class="col-xs-12 col-md-6 col-md-offset-3">
+      <button class="btn btn-primary" (click)="onFetchPosts()">
+        Fetch Posts
+      </button>
+      |
+      <button class="btn btn-danger" [disabled]="postList.length < 1" (click)="onClearPosts()">
+        Clear Posts
+      </button>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-12 col-md-6 col-md-offset-3">
+      <p *ngIf="postList.length<1 && isLoading == false">No posts available!</p>
+      <p *ngIf="isLoading">Loading...</p>
+      <div *ngIf="postList.length > 0">
+        <div *ngFor="let post of postList">
+          <h3>{{post.title}}</h3>
+          <p>{{post.content}}</p>
+          <button class="btn btn-danger" (click)="onDeletePost(post.id)">Delete Post</button>
+        </div>
+      </div>
+      <div class="alert alert-danger" *ngIf="error">
+        <h1>An Error Occured!</h1>
+        <p>{{error}}</p>
+        <br>
+        <button class="btn btn-danger" (click)="onErrorHandling()">Okay</button>
+      </div>
+    </div>
+  </div>
+</div>

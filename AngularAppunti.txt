@@ -1292,3 +1292,306 @@ E' POSSIBILE EFFETTUARE ANCHE IL SET VALUE E IL PATCH VALUE ANCHE SU REACTIVE ME
         username: suggestedName
       }
     })
+	
+########################################################################################################################################################################
+HTTP ANGULAR REQUEST
+
+In angular ovviamente è possibile effettuare richieste http, per fare ciò dobbiamo aggiungere il modulo HttpClientModule e laddove andiamo ad utilizzare i metodi http nel costruttore ci richiamiamo il servizio:
+  constructor(private http: HttpClient) {}
+ 
+ METODO GET:
+ 
+  getAllPost() {
+   
+    return this.http
+      .get('https://angularexercise-f928b-default-rtdb.firebaseio.com/post.json') //facciamo una chiamata http a questo endPoint
+      .pipe(                                              //ci creiamo una pipe che ci serve per filtrare i dati prima di ritornarli, e all'interno di questa pipe cicliamo sull'ObjectKeys di ogni singolo valore che ritorniamo dal backend.
+                                                          // successivamente andiamo ad aggiungere all'array un nuovo PostModel i cui valori sono il title e il content e l'id presi dall'array di oggetti json che abbiamo predo dal backend,
+                                                          //tramite la request get
+                                                  
+        map((responseData) => {
+          let postArr: PostModel[] = []
+          // Trasformiamo la risposta del server in un array di oggetti PostModel
+           Object.keys(responseData).map((key) => {
+            postArr.push(new PostModel(responseData[key].title, responseData[key].content, key));
+           
+          });
+          return postArr;
+        }),
+        catchError((error: HttpErrorResponse) => {
+          // Gestiamo eventuali errori durante la richiesta HTTP
+          console.log('Errore durante la richiesta di tutti i post:', error);
+          return throwError('Impossibile recuperare i post.');
+        })
+      );
+  }
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+  
+METODO POST && HANDLING ERROR:
+  
+NEL SERVICE ABBIAMO IL METODO sendNewPost in cui passiamo il post che vogliamo salvare e tale metodo ritorna un observable:
+
+  sendNewPost(postData: PostModel) {
+   return  this.http
+      .post(
+        'https://angularexercise-f928b-default-rtdb.firebaseio.com/post.json',
+        postData
+      )
+  }
+  
+successivamente nel component abbiamo il metodo onCreate che genera il post tramite il form, lo invia al metodo nel service successivamente fa la subscribe all'observable nel caso in cui sia completo (next)
+allora aggiorna la stampa dei valori e ripulisce il form, nel caso in cui dia errore stampa l'errore.
+
+  onCreatePost() {
+    this.postService
+      .sendNewPost(
+        new PostModel(
+          this.formPost.get('title').value,
+          this.formPost.get('content').value,
+          ''
+        )
+      )
+      .subscribe({
+        next: (postSended) => {
+          console.log(postSended);
+          this.onFetchPosts();
+          this.onClearForm();
+        },
+        error: (error) => this.error = error.message,
+      });
+  }
+  
+  GESTIONE ERRORI TRAMITE SUBJECT: 
+  
+  Note è possibile strutturare l'errore anche nel service, basta utilizzare il subject:
+  
+  Nel service dove facciamo la richiesta http, creiamo un nuovo subject:
+  
+  export class PostService {
+  emitError = new Subject<string>();    //CREIAMO IL SUBJECT
+  constructor(private http: HttpClient) {}
+
+  Nel metodo che effettua la richiesta http (sempre nel service) emettiamo tramite il metodo next del subject l'errore:
+
+  sendNewPost(postData: PostModel) {
+   return  this.http
+      .post(
+        'https://angularexercise-f928b-default-rtdb.firebaseio.com/post.json',
+        postData
+      ).subscribe({
+        next: (postSaved) => console.log(postSaved),
+        error : (e) => this.emitError.next(e)     //EMETTIAMO IL SUBJECT
+      })
+  }
+  
+  
+	Nel file ts del component facciamo nell'OnInit la subscrive al subject del service è quando viene emesso il valore lo mappiamo in una variabile error (ricordiamoci di fare l'unsubscribe con il metodo onDestroy):
+	
+	 ngOnInit() {
+	 this.subscriptionError = this.postService.emitError.subscribe({
+      error: (e) => this.error = e.message
+    })
+	}
+	
+	ngOnDestroy(): void {
+    this.subscriptionError.unsubscribe();
+  }
+  
+  E' POSSIBILE ANCHE EFFETTUARE IL CATCH DELL'ERRORE E LANCIARE UN THROW ERROR:
+ 
+  getAllPost() {
+    return this.http
+      .get('https://angularexercise-f928b-default-rtdb.firebaseio.com/post.json') 
+      .pipe(                                                                                               
+        map((responseData) => {
+         ... LOGICA DEL MAP
+        }),
+        catchError(() => {
+         // const error = new Error("IMPOSSIBILE OTTENERE DATI");
+          return throwError(() => "IMPOSSIBILE OTTENERE DATI");
+        })
+      );
+  }
+  
+ 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+DELETE BY ID
+
+COMPONENT:
+
+onDeletePost(id: string) {
+    this.postService.deleteById(id).subscribe({
+      next: (deletedData) => {
+        console.log(deletedData);
+        this.onFetchPosts();
+      },
+      error: (error) => this.error = error.message,
+    });
+  }
+  
+  SERVICE:
+  
+  deleteById(id: string){
+    console.log(id)
+    const url = `https://angularexercise-f928b-default-rtdb.firebaseio.com/post/${id}.json`;
+    return this.http.delete(url);
+  }
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+AGGIUNGERE HEADERS E PARAMS ALLA CHIAMATA HTTP:
+
+ci creiamo gli header:
+const headers = new HttpHeaders()
+  .set('Authorization', 'Bearer my-auth-token')
+  .set('Content-Type', 'application/json');
+
+ci creiamo i param:
+const params = new HttpParams()
+  .set('param1', 'value1')
+  .set('param2', 'value2');
+
+aggiungiamo header e param alla chiamata:
+this.http.get('https://example.com/api', { headers, params })
+  .subscribe(response => {
+    console.log(response);
+  });
+  ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+  ACCEDERE ALLA RESPONSE O AL BODY DELLA RICHIESTA HTTP: IMPORTANTISSSIMO:
+  In Aangular è possibile accedere direttamente al body della richiesta che effettuiamo ma possiamo dire ad Angular di ritornarci l'intera rispsota, con status code, headers ecc. Per fare ciò basta settare un terzo parametro:
+  Nel metodo GET, POST, DELETE ECC. aggiungere observe: 'body' (nel caso lasciassimo body tornerebbe unicamente il body della response, nel caso inserissimo observe: 'response' tornerà l'intera response.
+  
+    sendNewPost(postData: PostModel) {
+   return  this.http
+      .post(
+        'https://angularexercise-f928b-default-rtdb.firebaseio.com/post.json',
+        postData, {
+          observe: 'response'
+        }
+      )
+  }
+  
+  In questo caso ci ritornerà l'intera risposta e non solo il body.
+  Oltre a response e body ci sarebbe anche event ma non l'ho capito correttamente.
+  ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+  POSSIAMO ANCHE SETTARE COSA LA RICHIESTA SI ASPETTA, SE UN JSON O UN TEXT O UN BLOB(PER I FILE) O UN XML:
+   return  this.http
+      .post(
+        'https://angularexercise-f928b-default-rtdb.firebaseio.com/post.json',
+        postData, {
+          observe: 'response',
+		  responseType: 'xml'
+        }
+      )
+  }
+  ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+  ANGULAR INTERCEPTOR:
+  
+  Gli interceptor in Angular sono una funzionalità che permette di intercettare e manipolare le richieste HTTP e le risposte prima che vengano inviate o ricevute dal server.
+
+Gli interceptor sono un'implementazione di una interfaccia chiamata HttpInterceptor. In Angular, gli interceptor possono essere utilizzati per vari scopi, tra cui:
+
+Aggiungere o rimuovere headers alle richieste HTTP
+Manipolare i dati della richiesta prima dell'invio al server
+Manipolare i dati della risposta ricevuta dal server
+Gestire errori a livello globale
+
+Per utilizzare gli interceptor in Angular, devi creare una classe che implementi l'interfaccia HttpInterceptor, e poi registrare l'interceptor nell'applicazione attraverso il provider HTTP_INTERCEPTORS.
+Il provider è composto da 3 campi: 
+
+providers: [PostService, {
+    provide: HTTP_INTERCEPTORS,
+    useClass: AuthInterceptor,
+    multi: true
+
+  }],
+  
+In questo esempio, stiamo registrando l'interceptor MyInterceptor come provider per la costante HTTP_INTERCEPTORS. La proprietà multi indica che ci possono essere più interceptor registrati contemporaneamente
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+REQUEST INTERCEPTOR:
+
+import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from "@angular/common/http";
+import { Observable } from "rxjs";
+
+export class AuthInterceptor implements HttpInterceptor{
+
+    intercept(req: HttpRequest<any>, next: HttpHandler) {
+        const reqModified = req.clone({
+            headers: req.headers.append('Auth', 'xyz')
+        })
+        console.log('interceptor done');
+        return next.handle(reqModified); //la richiesta può continuare il suo flow
+    }
+
+}
+
+Per modificare una richiesta http prima che venga inviata al server dobbiamo clonarla in una constante e successivamente possiamo sovrscrivere i suoi elementi:
+Ad esempio nell'codice di sopra abbiamo aggiungo agli header presenti nella richiesta l'header 'Auth' con valore 'xyz'.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+RESPONSE INTERCEPTOR:
+
+Per manipolare invece la response che ci arriva da un HTTP REQUEST prima di farla arrivare alla component, possiamo applicare una pipe successivamente alla next.handle e all'interno andare a modificare i dati che necessitiamo:
+
+import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from "@angular/common/http";
+import { Observable } from "rxjs";
+
+export class AuthInterceptor implements HttpInterceptor{
+
+    intercept(req: HttpRequest<any>, next: HttpHandler) {
+        const reqModified = req.clone({
+            headers: req.headers.append('Auth', 'xyz')
+        })
+        console.log('interceptor done');
+        return next.handle(reqModified).pipe(tap(event => {
+            console.log(event);
+            if(event.type === HttpEventType.Response){
+                console.log('Response arrived, body data: ')
+                console.log(event.body);
+            }
+           })); //la richiesta può continuare il suo flow
+    }
+
+}
+  ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+  E' POSSIBILE CREARE MULTIPLI INTERCEPTOR UTILIZZANDO LO STESSO PROCESSO DESCRITTO SOPRA. E' IMPORTANTE PERO' L'ORDINE CON IL QUALE LI DICHIARIAMO.
+  
+  CASO REALE DI UTILIZZO DI UN INTERCEPTOR:
+  
+  Supponiamo di avere un'applicazione che richiede l'autenticazione degli utenti per accedere alle risorse protette dal server. Inoltre, vogliamo che tutte le richieste al server siano dotate di un token di accesso valido per verificare l'autenticità dell'utente.
+
+  Per gestire queste esigenze, possiamo creare un interceptor che intercetta ogni richiesta HTTP e aggiunge il token di accesso alla richiesta, se l'utente è autenticato. Inoltre, l'interceptor può anche controllare la risposta del server per verificare se il token di accesso è scaduto o non valido e, in tal caso, reindirizzare l'utente alla pagina di login.
+  
+  CODICE:
+  
+  import { Injectable } from '@angular/core';
+import { HttpInterceptor, HttpRequest, HttpHandler, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { AuthService } from './auth.service';
+
+@Injectable()
+export class AuthInterceptor implements HttpInterceptor {
+  constructor(private authService: AuthService) {}
+
+  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<any> {
+    const token = this.authService.getToken();
+    if (token) {
+      req = req.clone({
+        setHeaders: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+    }
+
+    return next.handle(req).pipe(
+      catchError((error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          this.authService.logout();
+          // Reindirizza l'utente alla pagina di login
+        }
+        return throwError(error);
+      })
+    );
+  }
+}
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
