@@ -1,0 +1,28 @@
+<div class="container">
+  <div class="row">
+
+    <div class="col-xs-12 col-sm-10 col-md-8 col-sm-offset-1 col-md-offset-2">
+      <ul class="list-group">
+        <input type="text" [(ngModel)] = "input" placeholder="Insert filter here!"><br><br>
+        <select name="pets" id="pet-select" [(ngModel)] = "select">
+          <option value="status">status</option>
+          <option value="started">started</option>
+          <option value="instanceType">instance</option>
+          <option value="name">name</option>
+      </select><br>
+      <h1>App title: {{title | async}}</h1>
+        <li
+          class="list-group-item"
+          *ngFor="let server of servers | filtredPipe:input:select | sortedPipe:select"
+          [ngClass]="getStatusClasses(server)">
+          <span
+            class="badge">
+            {{ server.status }}
+          </span>
+         <!-- <strong>{{ server.name | appPipe}}</strong> | {{ server.instanceType | uppercase | shorten: 2}} | {{ server.started | date: 'fullDate' | uppercase}} -->
+          <strong>{{ server.name }}</strong> | {{ server.instanceType | uppercase}} | {{ server.started | date: 'fullDate' | uppercase}}
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

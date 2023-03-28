@@ -1293,7 +1293,167 @@ E' POSSIBILE EFFETTUARE ANCHE IL SET VALUE E IL PATCH VALUE ANCHE SU REACTIVE ME
       }
     })
 	
-########################################################################################################################################################################
+#################################################################################################################################################
+
+
+
+
+#################################################################################################################################################
+PIPE IN ANGULAR:
+
+In Angular, le "pipe" sono un meccanismo utilizzato per la trasformazione dei dati. Una pipe prende un valore di input, lo elabora e restituisce un valore di output trasformato.
+
+Le pipe possono essere utilizzate in molti casi, come ad esempio la formattazione delle date, l'ordinamento degli array, la gestione delle stringhe, la conversione dei valori in valute o in unità di misura, ecc.
+
+Le pipe possono essere utilizzate nel template, ad esempio una stringa presa tramite stirng interpolation può essere trasformata tramite le pipe. ALCUNI ESEMPI:
+{{ server.started | date}} = Aggiusta l'output di una data.
+{{ server.instanceType | uppercase }} = Rende la stringa maiuscola
+
+ALCUNE PIPE PRESENTI IN ANGULAR: 
+
+{{ expression | uppercase }}: Converte una stringa in lettere maiuscole.
+
+{{ expression | lowercase }}: Converte una stringa in lettere minuscole.
+
+{{ expression | titlecase }}: Converte una stringa in lettere maiuscole all'inizio di ogni parola.
+
+{{ expression | date }}: Formatta una data in un formato specifico.
+
+{{ expression | number }}: Formatta un numero in una stringa.
+
+{{ expression | percent }}: Moltiplica un numero per 100 e lo formatta come una percentuale.
+
+{{ expression | currency }}: Formatta un numero come valuta, utilizzando il simbolo della valuta specificato.
+
+{{ expression | async }}: Aspetta il completamento di un'operazione asincrona e restituisce il risultato.
+
+{{ expression | slice }}: Restituisce una sottostringa di una stringa.
+
+{{ expression | json }}: Visualizza un oggetto JSON.
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+SI POSSONO ANCHE PERSONALIZZARE SPECIFICANDO ALCUNE CARATTERISTICHE:
+
+{{ server.started | date: 'fullDate'}}
+
+E' possibile combinare più pipe sulla stessa stinga ma è importante l'ordine in cui utilizziamo le pipe, ad esempio se utilizzassimo l'uppercase su una data prima di averla convertita in stirnga tramite la pipe date, avremmo errore:
+
+ {{ server.started | uppercase| date}} 
+ 
+ ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 
+ E' POSSIBILE ANCHE CREARE DELLE PIPE PERSONALIZZATE:
+ Creare una classe ts ed implementare PipeTransform, aggiungere il decorator Pipe e attribuire un nome alla pipe. Successivamente aggiungere la classe pipe all'appmodule nelle declaration: 
+ 
+  declarations: [AppComponent, AppPipe],
+  
+  CLASSE:
+  
+ 
+@Pipe({
+    name: 'appPipe'
+})
+export class AppPipe implements PipeTransform{
+
+    transform(value: any, ...args: any[]) {
+        console.log(value);
+        let arrStringWord: string[] = value.split(" ");
+        return `${arrStringWord[0].toLocaleUpperCase()} ${arrStringWord[1].toLocaleLowerCase()}`
+
+
+    }
+
+}
+
+
+Nel template la utilizzeremo in questa maniera: 
+
+ <strong>{{ server.name | appPipe}}</strong>
+ ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ E' possibile creare pipe con parametri personalizzati: 
+ 
+ @Pipe({
+    name: 'shorten'
+})
+export class ShortenStringPipe implements PipeTransform{
+    transform(value: any, troncatura: number, ...args: any[]) {
+        let string: string = value;
+        return string.substring(troncatura)
+    }
+
+}
+in questo caso abbiamo creato una pipe che taglia la stringa in una determianta posizione che decide l'utente:
+NELL'HTML:  {{ server.instanceType | uppercase | shorten: 2}} 
+
+
+
+PIPE CHE FA DA FILTER TRAMITE UN INPUT:
+
+
+@Pipe({
+    name: 'filtredPipe'
+})
+export class FiltredPipe implements PipeTransform{
+    transform(value: any, stringaInserita: string, campoDaConfrontare: string, ...args: any[]) {
+        if(value.length == 0 || stringaInserita === undefined || stringaInserita === '' ){
+            return value;
+        }
+        let arrValue = [];
+        value.forEach(x => {
+            if(x[campoDaConfrontare].toLocaleLowerCase().includes(stringaInserita.toLocaleLowerCase())){
+            arrValue.push(x);
+        }})
+        return arrValue;
+    }
+
+}
+
+HTML:
+ <div class="col-xs-12 col-sm-10 col-md-8 col-sm-offset-1 col-md-offset-2">
+      <ul class="list-group">
+        <input type="text" [(ngModel)] = "input" placeholder="Insert filter here!"><br><br>
+        <select name="pets" id="pet-select" [(ngModel)] = "select">
+          <option value="status">status</option>
+          <option value="started">started</option>
+          <option value="instanceType">instance</option>
+          <option value="name">name</option>
+      </select><br><br>
+        <li
+          class="list-group-item"
+          *ngFor="let server of servers | filtredPipe:input:select"
+          [ngClass]="getStatusClasses(server)">
+          <span
+            class="badge">
+            {{ server.status }}
+          </span>
+         <!-- <strong>{{ server.name | appPipe}}</strong> | {{ server.instanceType | uppercase | shorten: 2}} | {{ server.started | date: 'fullDate' | uppercase}} -->
+          <strong>{{ server.name }}</strong> | {{ server.instanceType | uppercase}} | {{ server.started | date: 'fullDate' | uppercase}}
+        </li>
+      </ul>
+    </div>
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+PURE NELLE PIPE DI ANGULAR:
+	
+Il "pure" (o "puro" in italiano) di una pipe in Angular si riferisce alla sua capacità di produrre un output immutabile e deterministico. In altre parole, una pipe che è considerata "pura" deve sempre produrre lo stesso output per lo stesso input, indipendentemente dal contesto in cui viene utilizzata.
+
+Per raggiungere la purezza, una pipe non deve avere effetti collaterali, come l'accesso a variabili globali o l'interazione con il DOM. Invece, una pipe deve dipendere solo dal valore di input che riceve e restituire un nuovo valore di output senza modificare l'input originale.
+
+La purezza delle pipe in Angular è importante perché consente di scrivere codice più prevedibile e facile da testare. Inoltre, le pipe pure possono essere facilmente "pippate" (ovvero "pipeable") per creare catene di elaborazione dati che possono essere facilmente comprensibili e manutenibili.
+	
+In altre parole in angular il pure di permette di rielaborare la pipe al cambiamento dei dati, qualora inserissimo o modificassimo un nuovo elemento nell'array in cui stiamo applicando la pipe in quel caso la pipe verrebbe rielaborata. Questo è sconsigliato in quanto le pipe sono molto pesanti e verrebbero a costare notevoli prestazioni
+
+Pure: false = In Angular, l'opzione pure: false specifica che una pipe non è pura, ovvero che può avere effetti collaterali e può restituire output diversi per lo stesso input a seconda del contesto in cui viene utilizzata.
+
+L'opzione pure: false viene utilizzata per creare pipe "impure", ovvero pipe che possono accedere a variabili globali, eseguire operazioni non deterministiche o effettuare chiamate a servizi esterni. Ciò significa che una pipe impura può produrre un output differente ogni volta che viene utilizzata, anche con lo stesso input.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+#################################################################################################################################################
+
+
+
+
+
+###################################################################################################################################################################
 HTTP ANGULAR REQUEST
 
 In angular ovviamente è possibile effettuare richieste http, per fare ciò dobbiamo aggiungere il modulo HttpClientModule e laddove andiamo ad utilizzare i metodi http nel costruttore ci richiamiamo il servizio:
@@ -1595,3 +1755,4 @@ export class AuthInterceptor implements HttpInterceptor {
 }
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+###################################################################################################################################################################
