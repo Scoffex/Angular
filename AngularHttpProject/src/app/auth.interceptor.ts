@@ -18,3 +18,19 @@ export class AuthInterceptor implements HttpInterceptor{
     }
 
 }
+
+
+
+timing esmeralda = 10 min;
+counter = 0;
+deleteCounter(){
+    setTimeout(counter++, 1000)
+}
+
+
+while(counter==timingEsmeralda){
+    deleteCounter();
+}
+
+if(something ask break){
+return timingEsmeralda - Counter;
